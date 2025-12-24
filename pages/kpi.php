@@ -519,6 +519,84 @@ require_once '../config/config.php';
                 </div>
             </div>
         </div>
+        
+        <!-- Advanced Analytics Section -->
+        <!-- MTBF Card -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-container" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 style="color: white;"><i class="fas fa-calculator"></i> MTBF - Mean Time Between Failure (ค่าเฉลี่ยเวลาระหว่างความเสียหาย)</h3>
+                    <div class="row">
+                        <div class="col-md-3 text-center py-3">
+                            <h5 style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">จำนวนครั้งที่เสียทั้งหมด</h5>
+                            <h2 style="font-size: 3rem; font-weight: 800;" id="totalFailures">0</h2>
+                            <p style="color: rgba(255,255,255,0.8);">ครั้ง</p>
+                        </div>
+                        <div class="col-md-3 text-center py-3">
+                            <h5 style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">ช่วงเวลาทั้งหมด</h5>
+                            <h2 style="font-size: 3rem; font-weight: 800;" id="totalPeriodDays">0</h2>
+                            <p style="color: rgba(255,255,255,0.8);">วัน</p>
+                        </div>
+                        <div class="col-md-3 text-center py-3">
+                            <h5 style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">MTBF (ชั่วโมง)</h5>
+                            <h2 style="font-size: 3rem; font-weight: 800;" id="mtbfHours">0</h2>
+                            <p style="color: rgba(255,255,255,0.8);">ชั่วโมง</p>
+                        </div>
+                        <div class="col-md-3 text-center py-3">
+                            <h5 style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">MTBF (วัน)</h5>
+                            <h2 style="font-size: 3rem; font-weight: 800; color: #ffd700;" id="mtbfDays">0</h2>
+                            <p style="color: rgba(255,255,255,0.8);">วัน</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Performance & Pareto Chart Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-area" style="color: #007bff;"></i> ประสิทธิภาพรายเดือน (12 เดือนล่าสุด)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="monthlyPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-bar" style="color: #dc3545;"></i> Pareto Chart - สาเหตุหลักของการเสีย</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="paretoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MTBF by Machine Table -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-container">
+                    <h3><i class="fas fa-wrench" style="color: #6f42c1;"></i> MTBF ตามเครื่องจักร (Top 20)</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="mtbfTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>รหัสเครื่องจักร</th>
+                                    <th class="text-center">จำนวนครั้งที่เสีย</th>
+                                    <th class="text-center">MTBF (ชั่วโมง)</th>
+                                    <th class="text-center">MTBF (วัน)</th>
+                                    <th class="text-center">ความเสียหายล่าสุด</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->

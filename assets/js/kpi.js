@@ -2,6 +2,7 @@
 // ไฟล์นี้จัดการการแสดงผล KPI Dashboard
 
 let statusChart, departmentChart, trendChart, statusPercentChart;
+let monthlyPerformanceChart, paretoChart;
 
 // เรียกใช้เมื่อโหลดหน้าเสร็จ
 $(document).ready(function() {
@@ -139,6 +140,9 @@ function updateCharts(data) {
     updateStatusPercentChart(data.summary);
     updateDepartmentChart(data.department_stats);
     updateTrendChart(data.daily_trend);
+    updateMonthlyPerformanceChart(data.monthly_performance);
+    updateParetoChart(data.failure_causes);
+    updateMTBFData(data.overall_mtbf, data.mtbf_data);
 }
 
 // กราฟวงกลมแสดงสถานะ
@@ -581,6 +585,255 @@ function updateBranchTable(branches) {
                 <td class="text-center"><span class="badge badge-primary">${repairCount}</span></td>
                 <td class="text-center"><span class="badge badge-success">${completedCount}</span></td>
                 <td class="text-center"><strong>${successRate}%</strong></td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// กราฟประสิทธิภาพรายเดือน
+function updateMonthlyPerformanceChart(monthlyData) {
+    const ctx = document.getElementById('monthlyPerformanceChart').getContext('2d');
+    
+    if (monthlyPerformanceChart) {
+        monthlyPerformanceChart.destroy();
+    }
+    
+    if (!monthlyData || monthlyData.length === 0) {
+        ctx.fillText('ไม่มีข้อมูล', 200, 150);
+        return;
+    }
+    
+    const labels = monthlyData.map(m => {
+        const [year, month] = m.month.split('-');
+        return `${month}/${year}`;
+    });
+    const totalRepairs = monthlyData.map(m => parseInt(m.total_repairs));
+    const completedRepairs = monthlyData.map(m => parseInt(m.completed_repairs));
+    const completionRate = monthlyData.map(m => parseFloat(m.completion_rate));
+    
+    monthlyPerformanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'การซ่อมทั้งหมด',
+                data: totalRepairs,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y'
+            }, {
+                label: 'ซ่อมเสร็จสิ้น',
+                data: completedRepairs,
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                yAxisID: 'y'
+            }, {
+                label: 'อัตราความสำเร็จ (%)',
+                data: completionRate,
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'จำนวนการซ่อม'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'อัตราความสำเร็จ (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    min: 0,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+// Pareto Chart - สาเหตุหลักของการเสีย
+function updateParetoChart(failureCauses) {
+    const ctx = document.getElementById('paretoChart').getContext('2d');
+    
+    if (paretoChart) {
+        paretoChart.destroy();
+    }
+    
+    if (!failureCauses || failureCauses.length === 0) {
+        ctx.fillText('ไม่มีข้อมูล', 200, 150);
+        return;
+    }
+    
+    // คำนวณ cumulative percentage
+    let cumulative = 0;
+    const data = failureCauses.map(cause => {
+        cumulative += parseFloat(cause.percentage);
+        return {
+            cause: cause.cause,
+            count: parseInt(cause.count),
+            percentage: parseFloat(cause.percentage),
+            cumulative: cumulative
+        };
+    });
+    
+    const labels = data.map(d => {
+        const maxLength = 30;
+        return d.cause.length > maxLength ? d.cause.substring(0, maxLength) + '...' : d.cause;
+    });
+    const counts = data.map(d => d.count);
+    const cumulativePercentages = data.map(d => d.cumulative);
+    
+    paretoChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'จำนวนครั้ง',
+                data: counts,
+                backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                borderColor: '#dc3545',
+                borderWidth: 1,
+                yAxisID: 'y'
+            }, {
+                label: 'เปอร์เซ็นต์สะสม (%)',
+                data: cumulativePercentages,
+                type: 'line',
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'กฎ 80/20: 80% ของปัญหามาจาก 20% ของสาเหตุ',
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'จำนวนครั้ง'
+                    },
+                    beginAtZero: true
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'เปอร์เซ็นต์สะสม (%)'
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                }
+            }
+        }
+    });
+}
+
+// อัปเดตข้อมูล MTBF
+function updateMTBFData(overallMtbf, mtbfData) {
+    // อัปเดต MTBF Cards
+    $('#totalFailures').text(overallMtbf.total_failures || 0);
+    $('#totalPeriodDays').text((overallMtbf.total_period_hours / 24).toFixed(1));
+    $('#mtbfHours').text(overallMtbf.mtbf_hours.toFixed(1));
+    $('#mtbfDays').text(overallMtbf.mtbf_days.toFixed(2));
+    
+    // อัปเดตตาราง MTBF
+    updateMTBFTable(mtbfData);
+}
+
+// ตาราง MTBF ตามเครื่องจักร
+function updateMTBFTable(mtbfData) {
+    const tbody = $('#mtbfTable tbody');
+    tbody.empty();
+    
+    if (!mtbfData || mtbfData.length === 0) {
+        tbody.append('<tr><td colspan="6" class="text-center text-muted">ไม่มีข้อมูล</td></tr>');
+        return;
+    }
+    
+    mtbfData.forEach((machine, index) => {
+        const mtbfHours = parseFloat(machine.mtbf_hours) || 0;
+        const mtbfDays = parseFloat(machine.mtbf_days) || 0;
+        const lastFailure = new Date(machine.last_failure).toLocaleDateString('th-TH');
+        
+        // กำหนดสีตาม MTBF (วัน)
+        let mtbfClass = 'success';
+        if (mtbfDays < 7) {
+            mtbfClass = 'danger';
+        } else if (mtbfDays < 30) {
+            mtbfClass = 'warning';
+        }
+        
+        const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${machine.machine_number || '-'}</strong></td>
+                <td class="text-center"><span class="badge badge-danger">${machine.failure_count}</span></td>
+                <td class="text-center">${mtbfHours.toFixed(1)}</td>
+                <td class="text-center"><span class="badge badge-${mtbfClass}">${mtbfDays.toFixed(2)}</span></td>
+                <td class="text-center">${lastFailure}</td>
             </tr>
         `;
         tbody.append(row);

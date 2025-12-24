@@ -189,6 +189,86 @@ try {
     $stmt = $conn->query($sql_machines);
     $machine_count = $stmt->fetch(PDO::FETCH_ASSOC);
     
+    // ===== 12. ประสิทธิภาพรายเดือน (Monthly Performance) - 12 เดือนล่าสุด =====
+    $sql_monthly = "SELECT 
+        DATE_FORMAT(start_job, '%Y-%m') as month,
+        COUNT(*) as total_repairs,
+        COUNT(CASE WHEN status = 40 THEN 1 END) as completed_repairs,
+        AVG(TIMESTAMPDIFF(HOUR, start_job, end_job)) as avg_repair_hours,
+        SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) / COUNT(*) * 100 as completion_rate
+        FROM mt_repair
+        WHERE start_job >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY DATE_FORMAT(start_job, '%Y-%m')
+        ORDER BY month ASC";
+    
+    $stmt = $conn->query($sql_monthly);
+    $monthly_performance = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // ===== 13. สาเหตุการเสีย (Failure Causes) สำหรับ Pareto Chart =====
+    $sql_failure_causes = "SELECT 
+        issue as cause,
+        COUNT(*) as count,
+        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM mt_repair WHERE DATE(start_job) BETWEEN :date_from AND :date_to) as percentage
+        FROM mt_repair
+        WHERE DATE(start_job) BETWEEN :date_from AND :date_to
+        AND issue IS NOT NULL AND issue != ''
+        GROUP BY issue
+        ORDER BY count DESC
+        LIMIT 20";
+    
+    $stmt = $conn->prepare($sql_failure_causes);
+    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $failure_causes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // ===== 14. คำนวณ MTBF (Mean Time Between Failure) =====
+    // MTBF = Total Operating Time / Number of Failures
+    $sql_mtbf = "SELECT 
+        machine_number,
+        COUNT(*) as failure_count,
+        SUM(TIMESTAMPDIFF(HOUR, start_job, COALESCE(end_job, NOW()))) as total_downtime,
+        MAX(start_job) as last_failure,
+        MIN(start_job) as first_failure
+        FROM mt_repair
+        WHERE DATE(start_job) BETWEEN :date_from AND :date_to
+        GROUP BY machine_number
+        HAVING failure_count > 1
+        ORDER BY failure_count DESC
+        LIMIT 20";
+    
+    $stmt = $conn->prepare($sql_mtbf);
+    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $mtbf_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // คำนวณ MTBF สำหรับแต่ละเครื่อง
+    foreach ($mtbf_data as &$machine) {
+        $period_hours = (strtotime($machine['last_failure']) - strtotime($machine['first_failure'])) / 3600;
+        $machine['mtbf_hours'] = $machine['failure_count'] > 1 ? $period_hours / ($machine['failure_count'] - 1) : 0;
+        $machine['mtbf_days'] = $machine['mtbf_hours'] / 24;
+    }
+    unset($machine);
+    
+    // คำนวณ MTBF รวมทั้งระบบ
+    $total_failures = array_sum(array_column($mtbf_data, 'failure_count'));
+    $total_period = 0;
+    if (count($mtbf_data) > 0) {
+        $all_dates = $conn->prepare("SELECT 
+            MIN(start_job) as min_date,
+            MAX(start_job) as max_date
+            FROM mt_repair
+            WHERE DATE(start_job) BETWEEN :date_from AND :date_to");
+        $all_dates->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+        $dates = $all_dates->fetch(PDO::FETCH_ASSOC);
+        if ($dates['min_date'] && $dates['max_date']) {
+            $total_period = (strtotime($dates['max_date']) - strtotime($dates['min_date'])) / 3600;
+        }
+    }
+    $overall_mtbf = [
+        'total_failures' => $total_failures,
+        'total_period_hours' => $total_period,
+        'mtbf_hours' => $total_failures > 0 ? $total_period / $total_failures : 0,
+        'mtbf_days' => $total_failures > 0 ? ($total_period / $total_failures) / 24 : 0
+    ];
+    
     // Response
     $response = [
         'success' => true,
@@ -208,7 +288,11 @@ try {
             'cost_stats' => $cost_stats,
             'technician_stats' => $technician_stats,
             'expensive_machines' => $expensive_machines,
-            'machine_count' => $machine_count
+            'machine_count' => $machine_count,
+            'monthly_performance' => $monthly_performance,
+            'failure_causes' => $failure_causes,
+            'mtbf_data' => $mtbf_data,
+            'overall_mtbf' => $overall_mtbf
         ]
     ];
     
