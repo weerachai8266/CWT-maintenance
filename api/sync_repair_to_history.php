@@ -26,6 +26,15 @@ function syncRepairToHistory($repairId, $conn) {
             return false;
         }
 
+        // ดึงข้อมูลเครื่องจักรเพื่อให้ได้ machine_id และ machine_name ที่แท้จริง
+        $machineSql = "SELECT id, machine_name FROM mt_machines WHERE machine_code = :machine_code LIMIT 1";
+        $machineStmt = $conn->prepare($machineSql);
+        $machineStmt->bindValue(':machine_code', $repair['machine_number']);
+        $machineStmt->execute();
+        $machineRow = $machineStmt->fetch(PDO::FETCH_ASSOC);
+        $machineId   = $machineRow ? $machineRow['id']           : null;
+        $machineName = $machineRow ? $machineRow['machine_name'] : $repair['machine_number'];
+
         // ❌ ห้าม sync รายการที่ถูกยกเลิก (status = 50)
         if ((int)$repair['status'] === STATUS_CANCELLED) {
             error_log("syncRepairToHistory: skipped repair id={$repairId} (status=50 cancelled)");
@@ -41,7 +50,9 @@ function syncRepairToHistory($repairId, $conn) {
         if ($checkStmt->rowCount() > 0) {
             // ถ้ามีแล้ว ให้ UPDATE แทน
             $updateSql = "UPDATE mt_machine_history SET
+                machine_id = :machine_id,
                 machine_code = :machine_code,
+                machine_name = :machine_name,
                 work_date = :work_date,
                 start_date = :start_date,
                 completed_date = :completed_date,
@@ -61,19 +72,21 @@ function syncRepairToHistory($repairId, $conn) {
                 WHERE document_no = :document_no";
             
             $stmt = $conn->prepare($updateSql);
+            $stmt->bindValue(':machine_id',   $machineId,   PDO::PARAM_INT);
+            $stmt->bindValue(':machine_name', $machineName);
             $stmt->bindValue(':parts_used', $repair['operation_detail']);
             $stmt->bindValue(':note', $repair['mtc_comment']);
         } else {
             // ถ้ายังไม่มี ให้ INSERT ใหม่
             $insertSql = "INSERT INTO mt_machine_history 
-                (machine_code, machine_name, document_no,
+                (machine_id, machine_code, machine_name, document_no,
                  work_date, start_date, completed_date,
                  issue_description, solution_description, parts_used,
                  work_hours, downtime_hours, total_cost,
                  reported_by, handled_by, status,
                  branch, department, note)
                 VALUES 
-                (:machine_code, :machine_name, :document_no,
+                (:machine_id, :machine_code, :machine_name, :document_no,
                  :work_date, :start_date, :completed_date,
                  :issue_description, :solution_description, :parts_used,
                  :work_hours, :downtime_hours, :total_cost,
@@ -81,8 +94,9 @@ function syncRepairToHistory($repairId, $conn) {
                  :branch, :department, :note)";
             
             $stmt = $conn->prepare($insertSql);
-            $stmt->bindValue(':machine_name', $repair['machine_number']); // ใช้ machine_number แทน machine_name ชั่วคราว
-            $stmt->bindValue(':parts_used', $repair['operation_detail']); // ใช้ operation_detail เป็นอะไหล่
+            $stmt->bindValue(':machine_id',   $machineId,   PDO::PARAM_INT);
+            $stmt->bindValue(':machine_name', $machineName);
+            $stmt->bindValue(':parts_used', $repair['operation_detail']);
             $stmt->bindValue(':note', $repair['mtc_comment']);
         }
         

@@ -171,6 +171,15 @@ $(document).ready(function() {
             $(this).addClass('was-validated');
             return;
         }
+
+        // ตรวจสอบว่าหมายเลขเครื่องจักรมีในฐานข้อมูลหรือไม่
+        const machineCode = $('#machine_number').val().trim().toUpperCase();
+        const machineExists = machinesData.find(m => m.machine_code === machineCode);
+        if (!machineExists) {
+            showMessage('ไม่พบหมายเลขเครื่องจักร "' + machineCode + '" ในฐานข้อมูล กรุณาเลือกเครื่องจักรที่มีอยู่เท่านั้น', 'error');
+            $('#machine_number').focus();
+            return;
+        }
         
         // Disable submit button
         const $submitBtn = $(this).find('button[type="submit"]');

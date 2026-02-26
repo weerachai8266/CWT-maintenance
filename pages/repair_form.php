@@ -96,7 +96,7 @@
                     </div>
                     <div class="form-group col-md-3">
                         <label for="machine_name">ชื่อเครื่องจักร</label>
-                        <input type="text" class="form-control" id="machine_name" name="machine_name" readonly required style="background-color: #e9ecef;">
+                        <input type="text" class="form-control" id="machine_name" name="machine_name" readonly style="background-color: #e9ecef;">
                     </div>
                 </div>
 
