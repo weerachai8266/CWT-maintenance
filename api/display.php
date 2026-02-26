@@ -82,7 +82,7 @@ try {
                     break;
                 case STATUS_PENDING:
                     $statusClass = 'badge-warning';
-                    $statusText = '⏳ รอดำเนินการ';
+                    $statusText = '⏳ ดำเนินการ';
                     $buttonHtml = '
                         <div class="btn-group" role="group" style="white-space: nowrap;">
                             <button class="btn btn-sm btn-success btn-update-status" data-id="' . $row["id"] . '" data-status="40" title="เสร็จสิ้น">
@@ -121,7 +121,7 @@ try {
                             <button class="btn btn-sm btn-success btn-update-status" data-id="' . $row["id"] . '" data-status="40" title="เสร็จสิ้น">
                                 <i class="fas fa-check"></i>
                             </button>
-                            <button class="btn btn-sm btn-secondary btn-update-status" data-id="' . $row["id"] . '" data-status="20" title="กลับรอดำเนินการ">
+                            <button class="btn btn-sm btn-secondary btn-update-status" data-id="' . $row["id"] . '" data-status="20" title="กลับดำเนินการ">
                                 <i class="fas fa-undo"></i>
                             </button>
                             <button class="btn btn-sm btn-dark btn-cancel-repair" data-id="' . $row["id"] . '" title="ยกเลิก">

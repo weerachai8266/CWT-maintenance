@@ -467,7 +467,7 @@
         </div>
         <div class="stat-item">
             <span class="stat-value" id="stat-pending">0</span>
-            <span class="stat-label">รอดำเนินการ</span>
+            <span class="stat-label">ดำเนินการ</span>
         </div>
         <div class="stat-item">
             <span class="stat-value" id="stat-waiting">0</span>
@@ -691,7 +691,7 @@
                     case 10:
                         return 'row-pending';  // รออนุมัติ
                     case 20:
-                        return 'row-pending';  // รอดำเนินการ
+                        return 'row-pending';  // ดำเนินการ
                     case 30:
                         return 'row-waiting';  // รออะไหล่
                     case 40:
@@ -793,7 +793,7 @@
                     case 20:
                         return { 
                             class: 'status-pending', 
-                            text: 'รอดำเนินการ',
+                            text: 'ดำเนินการ',
                             icon: 'fas fa-clock'
                         };
                     case 30:
@@ -824,14 +824,14 @@
                 let buttons = '<div style="display: flex; gap: 5px; justify-content: center;">';
                 
                 if (status === 10) {
-                    // รออนุมัติ -> อนุมัติไปรอดำเนินการ
+                    // รออนุมัติ -> อนุมัติไปดำเนินการ
                     buttons += `
                         <button class="btn-action btn-approve" data-id="${id}" data-status="20" style="padding: 8px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             <i class="fas fa-check"></i> อนุมัติ
                         </button>
                     `;
                 } else if (status === 20) {
-                    // รอดำเนินการ -> สามารถเปลี่ยนเป็น ซ่อมเสร็จ หรือ รออะไหล่
+                    // ดำเนินการ -> สามารถเปลี่ยนเป็น ซ่อมเสร็จ หรือ รออะไหล่
                     buttons += `
                         <button class="btn-action btn-complete" data-id="${id}" data-status="40" style="padding: 8px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             <i class="fas fa-check"></i> เสร็จ
@@ -841,7 +841,7 @@
                         </button>
                     `;
                 } else if (status === 30) {
-                    // รออะไหล่ -> สามารถเปลี่ยนเป็น ซ่อมเสร็จ หรือ กลับเป็นรอดำเนินการ
+                    // รออะไหล่ -> สามารถเปลี่ยนเป็น ซ่อมเสร็จ หรือ กลับเป็นดำเนินการ
                     buttons += `
                         <button class="btn-action btn-complete" data-id="${id}" data-status="40" style="padding: 8px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             <i class="fas fa-check"></i> เสร็จ
@@ -851,7 +851,7 @@
                         </button>
                     `;
                 } else if (status === 40) {
-                    // ซ่อมเสร็จสิ้น -> สามารถยกเลิกกลับเป็น รอดำเนินการ
+                    // ซ่อมเสร็จสิ้น -> สามารถยกเลิกกลับเป็น ดำเนินการ
                     buttons += `
                         <button class="btn-action btn-pending" data-id="${id}" data-status="20" style="padding: 8px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             <i class="fas fa-undo"></i> ยกเลิก

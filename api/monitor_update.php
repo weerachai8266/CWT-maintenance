@@ -75,7 +75,7 @@ try {
     
     // Get status name for response
     $statusNames = [
-        STATUS_PENDING => 'รอดำเนินการ',
+        STATUS_PENDING => 'ดำเนินการ',
         STATUS_COMPLETED => 'ซ่อมเสร็จแล้ว',
         STATUS_WAITING_PARTS => 'รออะไหล่'
     ];

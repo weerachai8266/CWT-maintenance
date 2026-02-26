@@ -77,7 +77,9 @@ try {
         COUNT(CASE WHEN status = 20 THEN 1 END) as in_progress_count,
         COUNT(CASE WHEN status = 30 THEN 1 END) as waiting_parts_count,
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_count,
-        AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
+        -- [สูตรเก่า] AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
+        -- [สูตรเก่า] AVG(work_hours) as avg_repair_hours,
+        AVG(CASE WHEN action_type = 'repair' THEN work_hours END) as avg_repair_hours,
         AVG(TIMESTAMPDIFF(MINUTE, start_job, approved_at)) as avg_approval_minutes,
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as first_time_fix_rate
         FROM mt_repair
@@ -143,6 +145,7 @@ try {
         FROM mt_repair
         WHERE DATE(start_job) BETWEEN DATE_SUB(:date_to, INTERVAL 30 DAY) AND :date_to
         AND status != 50
+        AND action_type = 'repair'
         GROUP BY DATE(start_job)
         ORDER BY DATE(start_job) ASC";
     
@@ -234,7 +237,7 @@ try {
     $downtime_hours_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // ===== 11. จำนวนเครื่องจักรทั้งหมด =====
-    $sql_machines = "SELECT COUNT(*) as total_machines FROM mt_machines";
+    $sql_machines = "SELECT COUNT(*) as total_machines FROM mt_machines WHERE machine_status = 'active'";
     $stmt = $conn->query($sql_machines);
     $machine_count = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -243,7 +246,8 @@ try {
         DATE_FORMAT(start_job, '%Y-%m') as month,
         COUNT(*) as total_repairs,
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_repairs,
-        AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
+        -- [สูตรเก่า] AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
+        AVG(CASE WHEN action_type = 'repair' THEN work_hours END) as avg_repair_hours,
         SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) / COUNT(*) * 100 as completion_rate
         FROM mt_repair
         WHERE start_job >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
@@ -258,9 +262,10 @@ try {
     $sql_failure_causes = "SELECT 
         issue as cause,
         COUNT(*) as count,
-        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM mt_repair WHERE $where_clause) as percentage
+        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM mt_repair WHERE $where_clause AND action_type = 'repair') as percentage
         FROM mt_repair
         WHERE $where_clause
+        AND action_type = 'repair'
         AND issue IS NOT NULL AND issue != ''
         GROUP BY issue
         ORDER BY count DESC
@@ -280,6 +285,7 @@ try {
         MIN(start_job) as first_failure
         FROM mt_repair
         WHERE $where_clause
+        AND action_type = 'repair'
         GROUP BY machine_number
         HAVING failure_count > 1
         ORDER BY failure_count DESC
@@ -332,7 +338,9 @@ try {
     $sql_prev_summary = "SELECT 
         COUNT(*) as total_repairs,
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_count,
-        AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
+        -- [สูตรเก่า] AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
+        -- [สูตรเก่า] AVG(work_hours) as avg_repair_hours,
+        AVG(CASE WHEN action_type = 'repair' THEN work_hours END) as avg_repair_hours,
         AVG(TIMESTAMPDIFF(MINUTE, start_job, approved_at)) as avg_approval_minutes,
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as success_rate,
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as first_time_fix_rate

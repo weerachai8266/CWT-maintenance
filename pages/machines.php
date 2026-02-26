@@ -144,7 +144,7 @@ require_once '../config/config.php';
                                 <option value="">ทั้งหมด</option>
                                 <option value="10">รออนุมัติ</option>
                                 <option value="11">ไม่อนุมัติ</option>
-                                <option value="20">รอดำเนินการ</option>
+                                <option value="20">ดำเนินการ</option>
                                 <option value="30">รออะไหล่</option>
                                 <option value="40">ซ่อมเสร็จสิ้น</option>
                                 <option value="50">ยกเลิก</option>
@@ -1005,7 +1005,7 @@ require_once '../config/config.php';
                                 <div class="form-group">
                                     <label>สถานะ</label>
                                     <select class="form-control" id="history_status">
-                                        <option value="pending">รอดำเนินการ</option>
+                                        <option value="pending">ดำเนินการ</option>
                                         <option value="in-progress">กำลังดำเนินการ</option>
                                         <option value="completed" selected>เสร็จสิ้น</option>
                                         <option value="cancelled">ยกเลิก</option>
@@ -1272,7 +1272,7 @@ require_once '../config/config.php';
                                     statusBadge = '<span class="badge badge-danger">ไม่อนุมัติ</span>';
                                     break;
                                 case 20:
-                                    statusBadge = '<span class="badge badge-warning">รอดำเนินการ</span>';
+                                    statusBadge = '<span class="badge badge-warning">ดำเนินการ</span>';
                                     break;
                                 case 30:
                                     statusBadge = '<span class="badge badge-info">รออะไหล่</span>';

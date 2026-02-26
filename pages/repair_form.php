@@ -96,7 +96,7 @@
                     </div>
                     <div class="form-group col-md-3">
                         <label for="machine_name">ชื่อเครื่องจักร</label>
-                        <input type="text" class="form-control" id="machine_name" name="machine_name" readonly style="background-color: #e9ecef;">
+                        <input type="text" class="form-control" id="machine_name" name="machine_name" readonly required style="background-color: #e9ecef;">
                     </div>
                 </div>
 
@@ -124,11 +124,17 @@
                         </div>
                         <div class="col-md-2">
                             <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" id="action_adjust" name="action_type" value="adjust">
+                                <label class="custom-control-label" for="action_adjust">ปรับตั้ง</label>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="custom-control custom-radio">
                                 <input type="radio" class="custom-control-input" id="action_other" name="action_type" value="other">
                                 <label class="custom-control-label" for="action_other">อื่นๆ</label>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <input type="text" class="form-control form-control-sm" id="action_other_text" name="action_other_text" placeholder="ระบุ..." disabled>
                         </div>
                     </div>
@@ -209,7 +215,7 @@
                     <select class="form-control" id="filter_status">
                         <option value="">ทั้งหมด</option>
                         <option value="10">📋 รออนุมัติ</option>
-                        <option value="20">⏳ รอดำเนินการ</option>
+                        <option value="20">⏳ ดำเนินการ</option>
                         <option value="30">⚙️ รออะไหล่</option>
                         <option value="40">✓ ซ่อมเสร็จสิ้น</option>
                     </select>

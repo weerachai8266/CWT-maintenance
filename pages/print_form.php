@@ -150,14 +150,17 @@ try {
                             <div class="checkbox-item">
                                 <input type="checkbox" <?php echo ($action_type === 'fix') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> แก้ไขปัญหา
                             </div>
-                        </div>
-                        <div class="checkbox-group">
                             <div class="checkbox-item">
                                 <input type="checkbox" <?php echo ($action_type === 'repair') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> ซ่อม
                             </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" <?php echo ($action_type === 'adjust') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> ปรับตั้ง
+                            </div>                        
                             <div class="checkbox-item">
                                 <input type="checkbox" <?php echo ($action_type === 'other') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> อื่นๆ 
-                                <span class="underline-field" style="min-width: 150px; <?php echo ($action_type === 'other') ? '' : ''; ?>"><?php echo ($action_type === 'other') ? htmlspecialchars($action_other_text) : ''; ?></span>
+                                <span class="underline-field" style="min-width: 150px;"><?php echo ($action_type === 'other') ? htmlspecialchars($action_other_text) : ''; ?></span>
                             </div>
                         </div>
                         

@@ -126,7 +126,7 @@ try {
     // Get status name for response message
     $statusNames = [
         STATUS_PENDING_APPROVAL => 'รออนุมัติ',
-        STATUS_PENDING => 'รอดำเนินการ',
+        STATUS_PENDING => 'ดำเนินการ',
         STATUS_WAITING_PARTS => 'รออะไหล่',
         STATUS_COMPLETED => 'ซ่อมเสร็จสิ้น'
     ];
