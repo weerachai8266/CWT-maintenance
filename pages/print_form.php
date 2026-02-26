@@ -145,22 +145,22 @@ try {
                         </div>
                         <div class="checkbox-group">
                             <div class="checkbox-item">
-                                <input type="checkbox" <?php echo ($action_type === 'check') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> ตรวจสอบ
+                                <input type="checkbox" id="at_check" value="check" <?php echo ($action_type === 'check') ? 'checked' : ''; ?> class="action-type-checkbox"> ตรวจสอบ
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" <?php echo ($action_type === 'fix') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> แก้ไขปัญหา
+                                <input type="checkbox" id="at_fix" value="fix" <?php echo ($action_type === 'fix') ? 'checked' : ''; ?> class="action-type-checkbox"> แก้ไขปัญหา
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" <?php echo ($action_type === 'repair') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> ซ่อม
+                                <input type="checkbox" id="at_repair" value="repair" <?php echo ($action_type === 'repair') ? 'checked' : ''; ?> class="action-type-checkbox"> ซ่อม
                             </div>
                         </div>
                         <div class="checkbox-group">
                             <div class="checkbox-item">
-                                <input type="checkbox" <?php echo ($action_type === 'adjust') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> ปรับตั้ง
+                                <input type="checkbox" id="at_adjust" value="adjust" <?php echo ($action_type === 'adjust') ? 'checked' : ''; ?> class="action-type-checkbox"> ปรับตั้ง
                             </div>                        
                             <div class="checkbox-item">
-                                <input type="checkbox" <?php echo ($action_type === 'other') ? 'checked' : ''; ?> class="readonly-checkbox" onclick="return false;"> อื่นๆ 
-                                <span class="underline-field" style="min-width: 150px;"><?php echo ($action_type === 'other') ? htmlspecialchars($action_other_text) : ''; ?></span>
+                                <input type="checkbox" id="at_other" value="other" <?php echo ($action_type === 'other') ? 'checked' : ''; ?> class="action-type-checkbox"> อื่นๆ 
+                                <span contenteditable="true" class="underline-field" id="action_other_text" style="min-width: 150px;"><?php echo ($action_type === 'other') ? htmlspecialchars($action_other_text) : ''; ?></span>
                             </div>
                         </div>
                         
@@ -457,6 +457,17 @@ try {
             }
         }
         
+        // Radio-button behavior for action_type checkboxes
+        document.querySelectorAll('.action-type-checkbox').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                if (this.checked) {
+                    document.querySelectorAll('.action-type-checkbox').forEach(function(other) {
+                        if (other !== cb) other.checked = false;
+                    });
+                }
+            });
+        });
+        
         // Add event listeners
         document.getElementById('start_date').addEventListener('change', calculateWorkHours);
         document.getElementById('start_time').addEventListener('change', calculateWorkHours);
@@ -502,7 +513,14 @@ try {
                 total_cost: document.getElementById('total_cost').textContent.trim(),
                 registry_date: document.getElementById('registry_date').value,
                 registry_signer: document.getElementById('registry_signer').textContent.trim(),
-                mtc_manager: document.getElementById('mtc_manager').textContent.trim()
+                mtc_manager: document.getElementById('mtc_manager').textContent.trim(),
+                
+                // Section 1
+                action_type: (function() {
+                    const checked = document.querySelector('.action-type-checkbox:checked');
+                    return checked ? checked.value : '';
+                })(),
+                action_other_text: document.getElementById('action_other_text').textContent.trim()
             };
             
             // Save button

@@ -51,6 +51,21 @@ try {
     $fields = [];
     $params = [':id' => $id];
     
+    // Section 1 fields (action_type)
+    if ($section == 1 || $section == 0) {
+        $allowed_action_types = ['check', 'fix', 'repair', 'adjust', 'other'];
+        $action_type_raw = sanitize_input($data['action_type'] ?? '');
+        $action_type = in_array($action_type_raw, $allowed_action_types) ? $action_type_raw : null;
+        $action_other_text = sanitize_input($data['action_other_text'] ?? '');
+        
+        if ($action_type !== null) {
+            $fields[] = "action_type = :action_type";
+            $params[':action_type'] = $action_type;
+        }
+        $fields[] = "action_other_text = :action_other_text";
+        $params[':action_other_text'] = $action_other_text;
+    }
+    
     // Section 2 fields
     if ($section == 2 || $section == 0) {
         $receive_date = validateDate(sanitize_input($data['receive_date'] ?? ''));
