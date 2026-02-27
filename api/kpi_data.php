@@ -36,7 +36,7 @@ try {
     $filter_status = $_GET['status'] ?? '';
     
     // Build WHERE clause for filters
-    $where_conditions = ["DATE(start_job) BETWEEN :date_from AND :date_to", "status != 50"];
+    $where_conditions = ["DATE(start_job) BETWEEN :date_from AND :date_to", "status != 50", "status != 11"];
     $params = [':date_from' => $date_from, ':date_to' => $date_to];
     
     if (!empty($filter_department)) {
@@ -96,6 +96,7 @@ try {
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_count
         FROM mt_repair
         WHERE $where_clause
+        AND action_type = 'repair'
         GROUP BY machine_number
         ORDER BY repair_count DESC
         LIMIT 10";
@@ -145,6 +146,7 @@ try {
         FROM mt_repair
         WHERE DATE(start_job) BETWEEN DATE_SUB(:date_to, INTERVAL 30 DAY) AND :date_to
         AND status != 50
+        AND status != 11
         AND action_type = 'repair'
         GROUP BY DATE(start_job)
         ORDER BY DATE(start_job) ASC";
@@ -252,6 +254,7 @@ try {
         FROM mt_repair
         WHERE start_job >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
         AND status != 50
+        AND status != 11
         GROUP BY DATE_FORMAT(start_job, '%Y-%m')
         ORDER BY month ASC";
     
@@ -346,7 +349,8 @@ try {
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as first_time_fix_rate
         FROM mt_repair
         WHERE DATE(start_job) BETWEEN :prev_date_from AND :prev_date_to
-        AND status != 50";
+        AND status != 50
+        AND status != 11";
     
     $stmt = $conn->prepare($sql_prev_summary);
     $stmt->execute([

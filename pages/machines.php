@@ -196,6 +196,14 @@ require_once '../config/config.php';
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-2" id="repairsPaginationWrap" style="display:none!important;">
+                    <div class="text-muted small" id="repairsPaginationInfo"></div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="repairsPagination"></ul>
+                    </nav>
+                </div>
             </div>
 
             <!-- Tab 2: จัดการเครื่องจักร -->
@@ -1248,7 +1256,12 @@ require_once '../config/config.php';
     </script>
     <script>
         // Load repairs data
-        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '') {
+        // Pagination state
+        var repairsCurrentPage = 1;
+        var repairsLimit = 100;
+
+        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '', page = 1) {
+            repairsCurrentPage = page;
             $.ajax({
                 url: '../api/get_all_repairs.php',
                 method: 'POST',
@@ -1257,12 +1270,19 @@ require_once '../config/config.php';
                     repair_date: repairDate,
                     document_no: documentNo,
                     status: status,
-                    registry_signer: registrySigner
+                    registry_signer: registrySigner,
+                    page: page,
+                    limit: repairsLimit
                 }),
                 success: function(response) {
                     let html = '';
-                    if (response.success && response.data.length > 0) {
-                        response.data.forEach(function(repair) {
+                    const rows = (response.success && response.data) ? response.data.rows : [];
+                    const total       = (response.success && response.data) ? response.data.total       : 0;
+                    const totalPages  = (response.success && response.data) ? response.data.total_pages  : 0;
+                    const currentPage = (response.success && response.data) ? response.data.page         : 1;
+
+                    if (rows.length > 0) {
+                        rows.forEach(function(repair) {
                             let statusBadge = '';
                             switch(parseInt(repair.status)) {
                                 case 10:
@@ -1292,7 +1312,11 @@ require_once '../config/config.php';
                             html += '<td>' + formatDateDMY(repair.start_job) + '</td>';
                             html += '<td>' + (repair.machine_number || '-') + '</td>';
                             html += '<td>' + (repair.reported_by || '-') + '</td>';
-                            html += '<td>' + (repair.issue ? (repair.issue.length > 50 ? repair.issue.substring(0, 50) + '...' : repair.issue) : '-') + '</td>';
+                            let issueText = repair.issue ? (repair.issue.length > 50 ? repair.issue.substring(0, 50) + '...' : repair.issue) : '-';
+                            if (parseInt(repair.status) === 11 && repair.reject_reason) {
+                                issueText += '<br><small class="text-danger"><i class="fas fa-times-circle"></i> <strong>เหตุผล:</strong> ' + repair.reject_reason + '</small>';
+                            }
+                            html += '<td>' + issueText + '</td>';
                             html += '<td>' + statusBadge + '</td>';
                             html += '<td>' + (repair.handled_by || '-') + '</td>';
                             html += '<td>' + (repair.registry_signer || '-') + '</td>';
@@ -1308,11 +1332,70 @@ require_once '../config/config.php';
                         html = '<tr><td colspan="9" class="text-center">ไม่พบข้อมูล</td></tr>';
                     }
                     $('#repairsTableBody').html(html);
+
+                    // Render pagination
+                    renderRepairsPagination(total, totalPages, currentPage);
                 },
                 error: function() {
                     $('#repairsTableBody').html('<tr><td colspan="9" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+                    $('#repairsPaginationWrap').hide();
                 }
             });
+        }
+
+        function renderRepairsPagination(total, totalPages, currentPage) {
+            var $wrap = $('#repairsPaginationWrap');
+            var $info = $('#repairsPaginationInfo');
+            var $pager = $('#repairsPagination');
+
+            if (totalPages <= 1) {
+                $info.text('ทั้งหมด ' + total + ' รายการ');
+                $pager.html('');
+                $wrap.show();
+                return;
+            }
+
+            var start = (currentPage - 1) * repairsLimit + 1;
+            var end   = Math.min(currentPage * repairsLimit, total);
+            $info.text('แสดง ' + start + '-' + end + ' จาก ' + total + ' รายการ');
+
+            var pages = '';
+            // Previous
+            pages += '<li class="page-item' + (currentPage === 1 ? ' disabled' : '') + '">' +
+                     '<a class="page-link" href="#" onclick="goRepairsPage(' + (currentPage - 1) + ');return false;">&laquo;</a></li>';
+
+            // Page numbers (show window of 5 around current)
+            var startPage = Math.max(1, currentPage - 2);
+            var endPage   = Math.min(totalPages, currentPage + 2);
+            if (startPage > 1) {
+                pages += '<li class="page-item"><a class="page-link" href="#" onclick="goRepairsPage(1);return false;">1</a></li>';
+                if (startPage > 2) pages += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+            }
+            for (var p = startPage; p <= endPage; p++) {
+                pages += '<li class="page-item' + (p === currentPage ? ' active' : '') + '">' +
+                         '<a class="page-link" href="#" onclick="goRepairsPage(' + p + ');return false;">' + p + '</a></li>';
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) pages += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+                pages += '<li class="page-item"><a class="page-link" href="#" onclick="goRepairsPage(' + totalPages + ');return false;">' + totalPages + '</a></li>';
+            }
+
+            // Next
+            pages += '<li class="page-item' + (currentPage === totalPages ? ' disabled' : '') + '">' +
+                     '<a class="page-link" href="#" onclick="goRepairsPage(' + (currentPage + 1) + ');return false;">&raquo;</a></li>';
+
+            $pager.html(pages);
+            $wrap.show();
+        }
+
+        function goRepairsPage(page) {
+            const repairDate     = $('#filter_repair_date').val();
+            const documentNo     = $('#filter_document_no').val();
+            const status         = $('#filter_status').val();
+            const registrySigner = $('#filter_registry_signer').val();
+            loadRepairs(repairDate, documentNo, status, registrySigner, page);
+            // Scroll table into view
+            $('html, body').animate({ scrollTop: $('#repairsTableBody').offset().top - 80 }, 200);
         }
 
         // Filter repairs
@@ -1321,7 +1404,7 @@ require_once '../config/config.php';
             const documentNo = $('#filter_document_no').val();
             const status = $('#filter_status').val();
             const registrySigner = $('#filter_registry_signer').val();
-            loadRepairs(repairDate, documentNo, status, registrySigner);
+            loadRepairs(repairDate, documentNo, status, registrySigner, 1);
         }
 
         function clearFilters() {
@@ -1329,7 +1412,7 @@ require_once '../config/config.php';
             $('#filter_document_no').val('');
             $('#filter_status').val('');
             $('#filter_registry_signer').val('');
-            loadRepairs();
+            loadRepairs('', '', '', '', 1);
         }
 
         // Print repair form
@@ -1351,7 +1434,7 @@ require_once '../config/config.php';
                     success: function(response) {
                         if (response.success) {
                             alert('ลบข้อมูลเรียบร้อย');
-                            loadRepairs();
+                            loadRepairs('', '', '', '', 1);
                         } else {
                             alert('เกิดข้อผิดพลาด: ' + response.message);
                         }

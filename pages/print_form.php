@@ -54,6 +54,11 @@ try {
     $job_status = $data['job_status'] ?? 'complete';
     $job_other_text = $data['job_other_text'] ?? '';
     
+    // Get record status for watermark
+    $record_status = intval($data['status'] ?? 0);
+    $reject_reason = $data['reject_reason'] ?? '';
+    $cancel_reason = $data['cancel_reason'] ?? '';
+    
     // Format Section 2 dates
     $receive_date_formatted = $data['receive_date'] ? date('Y-m-d', strtotime($data['receive_date'])) : '';
     $receive_time_formatted = $data['receive_time'] ? date('H:i', strtotime($data['receive_time'])) : '';
@@ -84,6 +89,38 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/print.css">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 90px;
+            font-weight: 900;
+            font-family: 'Sarabun', sans-serif;
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+            letter-spacing: 4px;
+        }
+        .watermark.rejected { color: #cc0000; }
+        .watermark.cancelled { color: #555555; }
+        .watermark-reason {
+            position: fixed;
+            top: calc(50% + 70px);
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Sarabun', sans-serif;
+            opacity: 0.14;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+            color: #cc0000;
+        }
+    </style>
 </head>
 <body>
     <!-- ปุ่มพิมพ์ (แสดงแค่บนหน้าจอ) -->
@@ -103,6 +140,17 @@ try {
     </div>
 
     <!-- ฟอร์มใบแจ้งซ่อม -->
+    <?php if ($record_status === 11): ?>
+    <div class="watermark rejected">ไม่อนุมัติ</div>
+    <?php if (!empty($reject_reason)): ?>
+    <div class="watermark-reason"><?php echo htmlspecialchars($reject_reason); ?></div>
+    <?php endif; ?>
+    <?php elseif ($record_status === 50): ?>
+    <div class="watermark cancelled">ยกเลิก</div>
+    <?php if (!empty($cancel_reason)): ?>
+    <div class="watermark-reason" style="color:#555;"><?php echo htmlspecialchars($cancel_reason); ?></div>
+    <?php endif; ?>
+    <?php endif; ?>
     <div class="print-container">
         <!-- Header -->
         <div class="form-section">

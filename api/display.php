@@ -10,7 +10,7 @@ try {
     $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
     
     // Build SQL query with filters
-    $sql = "SELECT id, division, department, branch, document_no, machine_number, issue, image_before, image_after, reported_by, handled_by, mt_report, status, start_job, end_job 
+    $sql = "SELECT id, division, department, branch, document_no, machine_number, issue, image_before, image_after, reported_by, handled_by, mt_report, status, start_job, end_job, reject_reason
             FROM mt_repair 
             WHERE 1=1";
     
@@ -22,7 +22,7 @@ try {
         $params[':status'] = intval($filter_status);
     } else {
         // If no status filter, show default statuses
-        $sql .= " AND (status = 10 OR status = 20 OR status = 30 OR (status = 40 AND DATE(end_job) = CURDATE()))";
+        $sql .= " AND (status = 10 OR (status = 11 AND DATE(approved_at) = CURDATE()) OR status = 20 OR status = 30 OR (status = 40 AND DATE(end_job) = CURDATE()))";
     }
     
     if ($filter_department !== '') {
@@ -80,6 +80,11 @@ try {
                         <span class="text-muted small">รออนุมัติ</span>
                     ';
                     break;
+                case STATUS_REJECTED:
+                    $statusClass = 'badge-danger';
+                    $statusText = '❌ ไม่อนุมัติ';
+                    $buttonHtml = '<span class="text-muted small">-</span>';
+                    break;
                 case STATUS_PENDING:
                     $statusClass = 'badge-warning';
                     $statusText = '⏳ ดำเนินการ';
@@ -100,11 +105,7 @@ try {
                 case STATUS_COMPLETED:
                     $statusClass = 'badge-success';
                     $statusText = '✓ ซ่อมเสร็จแล้ว';
-                    $buttonHtml = '
-                        <button class="btn btn-sm btn-secondary btn-update-status" data-id="' . $row["id"] . '" data-status="20" title="ยกเลิก">
-                            <i class="fas fa-undo"></i>
-                        </button>
-                    ';
+                    $buttonHtml = '<span class="text-muted small">-</span>';
                     break;
                 case STATUS_CANCELLED:
                     $statusClass = 'badge-dark';
@@ -140,7 +141,11 @@ try {
             echo "<td class='text-center'><strong style='color: #007bff;'>" . htmlspecialchars($row["document_no"] ?? '-') . "</strong></td>";
             echo "<td>" . htmlspecialchars($row["department"]) . "</td>";
             echo "<td class='text-center'><strong>" . htmlspecialchars($row["machine_number"]) . "</strong></td>";
-            echo "<td>" . nl2br(htmlspecialchars($row["issue"])) . "</td>";
+            $issueHtml = nl2br(htmlspecialchars($row["issue"]));
+            if (intval($row["status"]) === STATUS_REJECTED && !empty($row["reject_reason"])) {
+                $issueHtml .= "<br><small class='text-danger'><i class='fas fa-times-circle'></i> <strong>เหตุผล:</strong> " . htmlspecialchars($row["reject_reason"]) . "</small>";
+            }
+            echo "<td>" . $issueHtml . "</td>";
             
             // คอลัมน์รูปภาพ
             echo "<td class='text-center' style='white-space: nowrap;'>";

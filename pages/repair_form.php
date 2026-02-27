@@ -215,6 +215,7 @@
                     <select class="form-control" id="filter_status">
                         <option value="">ทั้งหมด</option>
                         <option value="10">📋 รออนุมัติ</option>
+                        <option value="11">❌ ไม่อนุมัติ</option>
                         <option value="20">⏳ ดำเนินการ</option>
                         <option value="30">⚙️ รออะไหล่</option>
                         <option value="40">✓ ซ่อมเสร็จสิ้น</option>
