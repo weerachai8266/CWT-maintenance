@@ -194,38 +194,80 @@ function viewHistoryDetail(id) {
 }
 
 function showHistoryDetailModal(data) {
-    let html = '<div class="row">';
-    html += '<div class="col-md-6"><strong>รหัสเครื่องจักร:</strong> ' + (data.machine_code || '-') + '</div>';
-    html += '<div class="col-md-6"><strong>ชื่อเครื่องจักร:</strong> ' + (data.machine_name || '-') + '</div>';
-    html += '</div><hr>';
-    html += '<div class="row">';
-    html += '<div class="col-md-6"><strong>เลขที่เอกสาร:</strong> ' + (data.document_no || '-') + '</div>';
-    html += '<div class="col-md-6"><strong>วันที่ทำงาน:</strong> ' + formatDateDMY(data.work_date) + '</div>';
-    html += '</div><hr>';
-    html += '<div class="row">';
-    html += '<div class="col-12"><strong>อาการเสีย/ปัญหา:</strong><br>' + nl2br(data.issue_description) + '</div>';
-    html += '</div><hr>';
-    html += '<div class="row">';
-    html += '<div class="col-12"><strong>วิธีแก้ไข:</strong><br>' + nl2br(data.solution_description) + '</div>';
-    html += '</div><hr>';
-    html += '<div class="row">';
-    html += '<div class="col-12"><strong>อะไหล่ที่ใช้:</strong><br>' + nl2br(data.parts_used) + '</div>';
-    html += '</div><hr>';
-    html += '<div class="row">';
-    html += '<div class="col-md-3"><strong>เวลาทำงาน:</strong> ' + (data.work_hours || '0') + ' ชม.</div>';
-    html += '<div class="col-md-3"><strong>เวลาหยุดเครื่อง:</strong> ' + (data.downtime_hours || '0') + ' ชม.</div>';
-    html += '<div class="col-md-6"><strong>ค่าใช้จ่ายรวม:</strong> ' + formatCurrency(data.total_cost) + '</div>';
-    html += '</div><hr>';
-    html += '<div class="row">';
-    html += '<div class="col-md-4"><strong>ผู้แจ้ง:</strong> ' + (data.reported_by || '-') + '</div>';
-    html += '<div class="col-md-4"><strong>ผู้รับผิดชอบ:</strong> ' + (data.handled_by || '-') + '</div>';
-    html += '<div class="col-md-4"><strong>สถานะ:</strong> ' + (data.status || '-') + '</div>';
+    var workTypeMap = {
+        'PM':  'PM (Preventive Maintenance)',
+        'CAL': 'Calibration',
+        'OVH': 'Overhaul (ยกเครื่องใหม่)',
+        'INS': 'ตรวจสอบ (Inspection)',
+        'RPR': 'ซ่อม (Repair)'
+    };
+    var statusMap = {
+        'pending':     '<span class="badge badge-warning">ดำเนินการ</span>',
+        'in-progress': '<span class="badge badge-info">กำลังดำเนินการ</span>',
+        'completed':   '<span class="badge badge-success">เสร็จสิ้น</span>',
+        'cancelled':   '<span class="badge badge-danger">ยกเลิก</span>'
+    };
+
+    var html = '';
+
+    // ข้อมูลเครื่องจักร
+    html += '<div class="row mb-3">';
+    html += '<div class="col-md-6"><label class="text-muted small mb-1">รหัสเครื่องจักร</label><div class="font-weight-bold">' + (data.machine_code || '-') + '</div></div>';
+    html += '<div class="col-md-6"><label class="text-muted small mb-1">ชื่อเครื่องจักร</label><div>' + (data.machine_name || '-') + '</div></div>';
     html += '</div>';
-    if (data.note) {
-        html += '<hr><div class="row"><div class="col-12"><strong>หมายเหตุ:</strong><br>' + nl2br(data.note) + '</div></div>';
-    }
-    
+
+    // ประเภทงาน / เลขที่เอกสาร / วันที่
+    html += '<div class="row mb-3">';
+    html += '<div class="col-md-4"><label class="text-muted small mb-1">ประเภทงาน</label><div><span class="badge badge-primary">' + (workTypeMap[data.work_type] || data.work_type || '-') + '</span></div></div>';
+    html += '<div class="col-md-4"><label class="text-muted small mb-1">เลขที่เอกสาร</label><div class="font-weight-bold">' + (data.document_no || '-') + '</div></div>';
+    html += '<div class="col-md-4"><label class="text-muted small mb-1">วันที่แจ้ง/ทำงาน</label><div>' + formatDateDMY(data.work_date) + '</div></div>';
+    html += '</div>';
+
+    html += '<hr>';
+
+    // รายละเอียดงาน
+    html += '<div class="form-group"><label class="font-weight-bold">อาการเสีย/ปัญหา/รายละเอียด</label>';
+    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:60px;">' + nl2br(data.issue_description || '-') + '</div></div>';
+
+    html += '<div class="form-group"><label class="font-weight-bold">วิธีแก้ไข/การซ่อม</label>';
+    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:60px;">' + nl2br(data.solution_description || '-') + '</div></div>';
+
+    html += '<div class="form-group"><label class="font-weight-bold">รายการอะไหล่ที่ใช้/รหัสอะไหล่</label>';
+    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:40px;">' + nl2br(data.parts_used || '-') + '</div></div>';
+
+    html += '<hr>';
+
+    // เวลาและค่าใช้จ่าย
+    html += '<h6 class="mt-3 mb-2"><i class="fas fa-clock"></i> เวลาและค่าใช้จ่าย</h6>';
+    html += '<div class="row mb-3">';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาเริ่มปฏิบัติงาน</label><div>' + formatDateTimeTH(data.start_date) + '</div></div>';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาปฏิบัติงานเสร็จ</label><div>' + formatDateTimeTH(data.completed_date) + '</div></div>';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาปฏิบัติงาน (ชั่วโมง)</label><div>' + (data.work_hours || '0') + ' ชม.</div></div>';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาหยุดเครื่อง (ชั่วโมง)</label><div>' + (data.downtime_hours || '0') + ' ชม.</div></div>';
+    html += '</div>';
+    html += '<div class="row mb-3">';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">ค่าแรง (บาท)</label><div>' + formatCurrency(data.labor_cost) + '</div></div>';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">ค่าอะไหล่ (บาท)</label><div>' + formatCurrency(data.parts_cost) + '</div></div>';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">ค่าใช้จ่ายอื่นๆ (บาท)</label><div>' + formatCurrency(data.other_cost) + '</div></div>';
+    html += '<div class="col-md-3"><label class="text-muted small mb-1">รวมค่าใช้จ่าย (บาท)</label><div class="font-weight-bold text-primary">' + formatCurrency(data.total_cost) + '</div></div>';
+    html += '</div>';
+
+    html += '<hr>';
+
+    // ผู้เกี่ยวข้อง
+    html += '<h6 class="mt-3 mb-2"><i class="fas fa-users"></i> ผู้เกี่ยวข้อง</h6>';
+    html += '<div class="row mb-3">';
+    html += '<div class="col-md-4"><label class="text-muted small mb-1">ผู้แจ้ง</label><div>' + (data.reported_by || '-') + '</div></div>';
+    html += '<div class="col-md-4"><label class="text-muted small mb-1">ผู้รับผิดชอบ/ช่าง</label><div>' + (data.handled_by || '-') + '</div></div>';
+    html += '<div class="col-md-4"><label class="text-muted small mb-1">สถานะ</label><div>' + (statusMap[data.status] || data.status || '-') + '</div></div>';
+    html += '</div>';
+
+    // หมายเหตุ
+    html += '<div class="form-group"><label class="font-weight-bold">หมายเหตุ</label>';
+    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:40px;">' + nl2br(data.note || '-') + '</div></div>';
+
     $('#historyDetailContent').html(html);
+    $('#historyDetailModal').data('history-id', data.id);
     $('#historyDetailModal').modal('show');
 }
 
@@ -263,8 +305,14 @@ function fillHistoryForm(data) {
     }
     
     $('#history_work_date').val(data.work_date);
-    $('#history_start_date').val(data.start_date);
-    $('#history_completed_date').val(data.completed_date);
+    // แปลง MySQL DATETIME (YYYY-MM-DD HH:MM:SS) เป็น datetime-local (YYYY-MM-DDTHH:MM)
+    function toDatetimeLocal(val) {
+        if (!val) return '';
+        return val.replace(' ', 'T').substring(0, 16);
+    }
+    $('#history_start_time').val(toDatetimeLocal(data.start_date));
+    $('#history_end_time').val(toDatetimeLocal(data.completed_date));
+    if (data.start_date || data.completed_date) calculateWorkDuration();
     $('#history_issue').val(data.issue_description);
     $('#history_solution').val(data.solution_description);
     $('#history_parts').val(data.parts_used);
@@ -294,8 +342,9 @@ function saveHistory(event) {
         machine_name: $('#history_machine_name').val(),
         work_type: $('#history_work_type').val(), // ประเภทงาน (PM, CAL, REP, INS)
         work_date: $('#history_work_date').val(),
-        start_date: $('#history_start_date').val() || null,
-        completed_date: $('#history_completed_date').val() || null,
+        // ส่ง datetime เต็ม (YYYY-MM-DD HH:MM) ไปบันทึกลง DB DATETIME column
+        start_date: ($('#history_start_time').val() || '').replace('T', ' ') || null,
+        completed_date: ($('#history_end_time').val() || '').replace('T', ' ') || null,
         issue_description: $('#history_issue').val(),
         solution_description: $('#history_solution').val(),
         parts_used: $('#history_parts').val(),
@@ -329,6 +378,8 @@ function saveHistory(event) {
                 $('#historyModal').modal('hide');
                 // โหลดประวัติใหม่
                 loadMachineHistoryByCode(data.machine_code);
+                // รีเฟรชรายการใบแจ้งซ่อม Tab 1
+                if (typeof loadRepairs === 'function') loadRepairs();
             } else {
                 alert('เกิดข้อผิดพลาด: ' + response.message);
             }
@@ -358,6 +409,8 @@ function deleteHistory(id) {
                 if (machineCode) {
                     loadMachineHistoryByCode(machineCode);
                 }
+                // รีเฟรชรายการใบแจ้งซ่อม Tab 1
+                if (typeof loadRepairs === 'function') loadRepairs();
             } else {
                 alert('เกิดข้อผิดพลาด: ' + response.message);
             }

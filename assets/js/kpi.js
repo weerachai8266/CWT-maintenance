@@ -426,6 +426,7 @@ function updateDepartmentChart(deptData) {
             scales: {
                 y: {
                     beginAtZero: true,
+                    grace: '15%',
                     ticks: {
                         stepSize: 1,
                         font: {
@@ -537,6 +538,7 @@ function updateTrendChart(trendData) {
             scales: {
                 y: {
                     beginAtZero: true,
+                    grace: '15%',
                     ticks: {
                         stepSize: 1,
                         font: {
@@ -746,6 +748,7 @@ function updateMonthlyPerformanceChart(monthlyData) {
                     type: 'linear',
                     display: true,
                     position: 'left',
+                    grace: '15%',
                     title: {
                         display: true,
                         text: 'จำนวนการซ่อม'
@@ -755,6 +758,7 @@ function updateMonthlyPerformanceChart(monthlyData) {
                     type: 'linear',
                     display: true,
                     position: 'right',
+                    grace: '15%',
                     title: {
                         display: true,
                         text: 'อัตราความสำเร็จ (%)'
@@ -846,6 +850,7 @@ function updateParetoChart(failureCauses) {
                     type: 'linear',
                     display: true,
                     position: 'left',
+                    grace: '15%',
                     title: {
                         display: true,
                         text: 'จำนวนครั้ง'
@@ -856,6 +861,7 @@ function updateParetoChart(failureCauses) {
                     type: 'linear',
                     display: true,
                     position: 'right',
+                    grace: '15%',
                     title: {
                         display: true,
                         text: 'เปอร์เซ็นต์สะสม (%)'

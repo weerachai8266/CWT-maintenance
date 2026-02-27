@@ -154,15 +154,11 @@ try {
     $stmt->execute();
     
     // Check if any row was affected
+    $skip_sync = isset($data['skip_sync']) && $data['skip_sync'] === true;
+
     if ($stmt->rowCount() > 0) {
-        // ตรวจสอบสถานะ และ sync ไปยัง history ถ้าเป็นงานเสร็จสิ้น
-        $checkStatusSql = "SELECT status FROM mt_repair WHERE id = :id";
-        $checkStmt = $conn->prepare($checkStatusSql);
-        $checkStmt->bindParam(':id', $id);
-        $checkStmt->execute();
-        $repairData = $checkStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($repairData && $repairData['status'] == STATUS_COMPLETED) {
+        // sync ไปยัง history เฉพาะเมื่อผู้ใช้กดปุ่ม "บันทึกลงประวัติ" โดยตรง (ไม่ auto-sync ตามสถานะ)
+        if (!$skip_sync) {
             syncRepairToHistory($id, $conn);
         }
         

@@ -1043,7 +1043,7 @@ require_once '../config/config.php';
 
     <!-- Modal แสดงรายละเอียดประวัติ -->
     <div class="modal fade" id="historyDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title">
@@ -1252,6 +1252,15 @@ require_once '../config/config.php';
             var mm = String(d.getMonth() + 1).padStart(2, '0');
             var yyyy = d.getFullYear();
             return dd + '-' + mm + '-' + yyyy;
+        }
+        function formatDateTimeTH(dateStr) {
+            if (!dateStr) return '-';
+            // MySQL DATETIME: "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DDTHH:MM"
+            var m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+            if (m) {
+                return m[3] + '-' + m[2] + '-' + m[1] + ' ' + m[4] + ':' + m[5];
+            }
+            return formatDateDMY(dateStr);
         }
     </script>
     <script>

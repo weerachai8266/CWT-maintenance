@@ -128,8 +128,11 @@ try {
         <!-- <a href="../index.php" class="print-btn" style="display: inline-block; margin-right: 10px; background: #6c757d; text-decoration: none;">
             <i class="fas fa-home"></i> หน้าแรก
         </a> -->
-        <button class="print-btn" id="save-btn" style="background: #28a745;">
+        <button class="print-btn" id="save-repair-btn" style="background: #007bff;">
             <i class="fas fa-save"></i> บันทึกข้อมูล
+        </button>
+        <button class="print-btn" id="save-btn" style="background: #28a745;">
+            <i class="fas fa-save"></i> บันทึกลงประวัติ
         </button>
         <button class="print-btn" onclick="window.print()">
             <i class="fas fa-print"></i> พิมพ์ใบแจ้งซ่อม
@@ -307,7 +310,7 @@ try {
                     <div class="section-header" style="border-bottom: 1px solid #000; border-top: 1px solid #000;">3 : บันทึกการดำเนินการซ่อม / สร้าง</div>
                     <div class="section-content">
                         <div class="form-field">
-                            สาเหตุ
+                            สาเหตุ/การแก้ไขปัญหา
                         </div>
                         <div>
                             <textarea class="text-area" id="mt_report" rows="3"><?php echo htmlspecialchars($data['mt_report'] ?? ''); ?></textarea>
@@ -522,9 +525,8 @@ try {
         document.getElementById('end_date').addEventListener('change', calculateWorkHours);
         document.getElementById('end_time').addEventListener('change', calculateWorkHours);
         
-        // Save data function
-        document.getElementById('save-btn').addEventListener('click', function() {
-            // Get operation types (checkboxes)
+        // ฟังก์ชันรวบรวมข้อมูลฟอร์ม
+        function collectFormData() {
             const operationTypes = [];
             if (document.getElementById('op_change_part').checked) operationTypes.push('change_part');
             if (document.getElementById('op_external_repair').checked) operationTypes.push('external_repair');
@@ -534,20 +536,15 @@ try {
                 const otherText = document.getElementById('operation_other_text').textContent.trim();
                 operationTypes.push('other:' + otherText);
             }
-            
-            // Collect data from editable fields
-            const formData = {
+            return {
                 id: <?php echo $id; ?>,
                 section: 0,
-                // Section 2
                 receive_date: document.getElementById('receive_date').value,
                 receive_time: document.getElementById('receive_time').value,
                 receiver_mt: document.getElementById('receiver_mt').textContent.trim(),
                 mtc_comment: document.getElementById('mtc_comment').value.trim(),
                 mtc_signer: document.getElementById('mtc_signer').textContent.trim(),
                 mtc_date: document.getElementById('mtc_date').value,
-                
-                // Section 3
                 mt_report: document.getElementById('mt_report').value.trim(),
                 operation_type: operationTypes.join(','),
                 operation_detail: document.getElementById('operation_detail').value.trim(),
@@ -562,51 +559,61 @@ try {
                 registry_date: document.getElementById('registry_date').value,
                 registry_signer: document.getElementById('registry_signer').textContent.trim(),
                 mtc_manager: document.getElementById('mtc_manager').textContent.trim(),
-                
-                // Section 1
                 action_type: (function() {
                     const checked = document.querySelector('.action-type-checkbox:checked');
                     return checked ? checked.value : '';
                 })(),
                 action_other_text: document.getElementById('action_other_text').textContent.trim()
             };
-            
-            // Save button
-            const saveBtn = this;
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
-            
-            // Send data via AJAX
+        }
+
+        // ฟังก์ชัน send ข้อมูลไปยัง API
+        function sendSaveRequest(btn, skipSync) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
+            const formData = collectFormData();
+            if (skipSync) formData.skip_sync = true;
             fetch('../api/update_print_form.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     alert('✓ บันทึกข้อมูลเรียบร้อยแล้ว');
-                    saveBtn.innerHTML = '<i class="fas fa-check"></i> บันทึกสำเร็จ';
-                    saveBtn.style.background = '#218838';
+                    btn.innerHTML = '<i class="fas fa-check"></i> บันทึกสำเร็จ';
+                    btn.style.filter = 'brightness(0.85)';
                     setTimeout(() => {
-                        saveBtn.disabled = false;
-                        saveBtn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล';
-                        saveBtn.style.background = '#28a745';
+                        btn.disabled = false;
+                        btn.innerHTML = btn.dataset.label;
+                        btn.style.filter = '';
                     }, 2000);
                 } else {
                     alert('เกิดข้อผิดพลาด: ' + data.message);
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล';
+                    btn.disabled = false;
+                    btn.innerHTML = btn.dataset.label;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล';
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset.label;
             });
+        }
+
+        // ปุ่มบันทึกข้อมูล (เฉพาะ repair ไม่ sync history)
+        const saveRepairBtn = document.getElementById('save-repair-btn');
+        saveRepairBtn.dataset.label = '<i class="fas fa-save"></i> บันทึกข้อมูล';
+        saveRepairBtn.addEventListener('click', function() {
+            sendSaveRequest(this, true);
+        });
+
+        // Save data function
+        document.getElementById('save-btn').addEventListener('click', function() {
+            sendSaveRequest(this, false);
+            this.dataset.label = '<i class="fas fa-save"></i> บันทึกลงประวัติ';
         });
         
         // Auto print when page loads (optional)
