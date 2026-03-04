@@ -109,7 +109,7 @@ $(document).ready(function() {
         const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
         const alertHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show success-message" role="alert">
-                <strong>${type === 'success' ? '✓' : '✗'}</strong> ${message}
+                <strong>${type === 'success' ? '     ✓' : '     ✗'}</strong> ${message}
                 <button type="button" class="close" data-dismiss="alert">
                     <span>&times;</span>
                 </button>

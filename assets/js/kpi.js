@@ -224,7 +224,7 @@ function updateStatusChart(statusData) {
     const counts = [];
     const colors = [];
     
-    // สถานะ: 10=รออนุมัติ, 11=ไม่อนุมัติ, 20=รอดำเนินการ, 30=รออะไหล่, 40=ซ่อมเสร็จสิ้น
+    // สถานะ: 10=รออนุมัติ, 11=ไม่อนุมัติ, 20=ดำเนินการ, 30=รออะไหล่, 40=ซ่อมเสร็จสิ้น
     const statusColors = {
         '10': '#ffc107',
         '11': '#dc3545',
@@ -236,7 +236,7 @@ function updateStatusChart(statusData) {
     const statusLabels = {
         '10': 'รออนุมัติ',
         '11': 'ไม่อนุมัติ',
-        '20': 'รอดำเนินการ',
+        '20': 'ดำเนินการ',
         '30': 'รออะไหล่',
         '40': 'ซ่อมเสร็จสิ้น'
     };
@@ -281,9 +281,9 @@ function updateStatusChart(statusData) {
                             const percentage = ((value / total) * 100).toFixed(1);
                             return `${label}: ${value} รายการ (${percentage}%)`;
                         },
-                        afterLabel: function(context) {
-                            return 'คลิกเพื่อดูรายละเอียด';
-                        }
+                        // afterLabel: function(context) {
+                        //     return 'คลิกเพื่อดูรายละเอียด';
+                        // }
                     },
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     titleFont: { size: 14, family: 'Sarabun', weight: 'bold' },
@@ -292,13 +292,13 @@ function updateStatusChart(statusData) {
                     displayColors: true
                 }
             },
-            onClick: (event, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const status = Object.keys(statusLabels)[index];
-                    showStatusDetails(status, statusLabels[status]);
-                }
-            }
+            // onClick: (event, elements) => {
+            //     if (elements.length > 0) {
+            //         const index = elements[0].index;
+            //         const status = Object.keys(statusLabels)[index];
+            //         showStatusDetails(status, statusLabels[status]);
+            //     }
+            // }
         }
     });
 }
@@ -840,7 +840,7 @@ function updateParetoChart(failureCauses) {
                     position: 'top',
                 },
                 title: {
-                    display: true,
+                    display: false,
                     text: 'กฎ 80/20: 80% ของปัญหามาจาก 20% ของสาเหตุ',
                     font: {
                         size: 12
@@ -863,7 +863,6 @@ function updateParetoChart(failureCauses) {
                     type: 'linear',
                     display: true,
                     position: 'right',
-                    grace: '15%',
                     title: {
                         display: true,
                         text: 'เปอร์เซ็นต์สะสม (%)'

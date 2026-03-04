@@ -74,7 +74,7 @@ try {
                         ($data['end_job'] ? date('Y-m-d', strtotime($data['end_job'])) : '');
     $section3_end_time = $data['end_time'] ? date('H:i', strtotime($data['end_time'])) : 
                         ($data['end_job'] ? date('H:i', strtotime($data['end_job'])) : '');
-    $registry_date_formatted = $data['registry_date'] ? date('Y-m-d', strtotime($data['registry_date'])) : '';
+    $registry_date_formatted = $data['registry_date'] ? date('Y-m-d', strtotime($data['registry_date'])) : date('Y-m-d');
     
 } catch (PDOException $e) {
     die('เกิดข้อผิดพลาด: ' . $e->getMessage());
@@ -108,7 +108,7 @@ try {
         .watermark.cancelled { color: #555555; }
         .watermark-reason {
             position: fixed;
-            top: calc(50% + 70px);
+            top: calc(50% + 120px);
             left: 50%;
             transform: translate(-50%, -50%) rotate(-35deg);
             font-size: 28px;
@@ -120,6 +120,34 @@ try {
             white-space: nowrap;
             color: #cc0000;
         }
+        .field-error {
+            border: 2px solid #dc3545 !important;
+            background-color: #fff0f0 !important;
+            border-radius: 3px;
+            animation: fieldShake 0.35s ease;
+        }
+        @keyframes fieldShake {
+            0%, 100% { transform: translateX(0); }
+            25%       { transform: translateX(-5px); }
+            75%       { transform: translateX(5px); }
+        }
+        .validation-toast {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-size: 13pt;
+            font-family: 'Sarabun', sans-serif;
+            z-index: 99999;
+            box-shadow: 0 4px 12px rgba(0,0,0,.25);
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
     </style>
 </head>
 <body>
@@ -128,10 +156,11 @@ try {
         <!-- <a href="../index.php" class="print-btn" style="display: inline-block; margin-right: 10px; background: #6c757d; text-decoration: none;">
             <i class="fas fa-home"></i> หน้าแรก
         </a> -->
-        <button class="print-btn" id="save-repair-btn" style="background: #007bff;">
+        <?php $is_locked = in_array($record_status, [11, 50]); ?>
+        <button class="print-btn" id="save-repair-btn" style="background: #007bff;<?php echo $is_locked ? ' opacity:0.45; cursor:not-allowed;' : ''; ?>" <?php echo $is_locked ? 'disabled title="ไม่สามารถแก้ไขได้ (สถานะ ' . ($record_status === 11 ? 'ไม่อนุมัติ' : 'ยกเลิก') . ')"' : ''; ?>>
             <i class="fas fa-save"></i> บันทึกข้อมูล
         </button>
-        <button class="print-btn" id="save-btn" style="background: #28a745;">
+        <button class="print-btn" id="save-btn" style="background: #28a745;<?php echo $is_locked ? ' opacity:0.45; cursor:not-allowed;' : ''; ?>" <?php echo $is_locked ? 'disabled title="ไม่สามารถแก้ไขได้ (สถานะ ' . ($record_status === 11 ? 'ไม่อนุมัติ' : 'ยกเลิก') . ')"' : ''; ?>>
             <i class="fas fa-save"></i> บันทึกลงประวัติ
         </button>
         <button class="print-btn" onclick="window.print()">
@@ -194,7 +223,7 @@ try {
                         <div class="form-field" style="margin-top: 12px;">
                             <strong>โปรดดำเนินการ</strong>
                         </div>
-                        <div class="checkbox-group">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); margin: 2px 0;">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="at_check" value="check" <?php echo ($action_type === 'check') ? 'checked' : ''; ?> class="action-type-checkbox"> ตรวจสอบ
                             </div>
@@ -204,12 +233,10 @@ try {
                             <div class="checkbox-item">
                                 <input type="checkbox" id="at_repair" value="repair" <?php echo ($action_type === 'repair') ? 'checked' : ''; ?> class="action-type-checkbox"> ซ่อม
                             </div>
-                        </div>
-                        <div class="checkbox-group">
                             <div class="checkbox-item">
                                 <input type="checkbox" id="at_adjust" value="adjust" <?php echo ($action_type === 'adjust') ? 'checked' : ''; ?> class="action-type-checkbox"> ปรับตั้ง
-                            </div>                        
-                            <div class="checkbox-item">
+                            </div>
+                            <div class="checkbox-item" style="grid-column: span 2;">
                                 <input type="checkbox" id="at_other" value="other" <?php echo ($action_type === 'other') ? 'checked' : ''; ?> class="action-type-checkbox"> อื่นๆ 
                                 <span contenteditable="true" class="underline-field" id="action_other_text" style="min-width: 150px;"><?php echo ($action_type === 'other') ? htmlspecialchars($action_other_text) : ''; ?></span>
                             </div>
@@ -524,6 +551,32 @@ try {
         document.getElementById('start_time').addEventListener('change', calculateWorkHours);
         document.getElementById('end_date').addEventListener('change', calculateWorkHours);
         document.getElementById('end_time').addEventListener('change', calculateWorkHours);
+
+        // คำนวณนิพจน์ใน total_cost (เช่น 10+20 → 30)
+        const totalCostEl = document.getElementById('total_cost');
+        function evalTotalCost() {
+            const raw = totalCostEl.textContent.trim();
+            if (!raw) return;
+            // ตรวจว่ามีตัวดำเนินการหรือไม่
+            if (/[+\-*/]/.test(raw)) {
+                try {
+                    // อนุญาตเฉพาะตัวเลขและตัวดำเนินการพื้นฐาน
+                    const sanitized = raw.replace(/[^0-9+\-*/().\s]/g, '');
+                    const result = Function('"use strict"; return (' + sanitized + ')')();
+                    if (isFinite(result)) {
+                        totalCostEl.textContent = parseFloat(result.toFixed(2));
+                    }
+                } catch(e) { /* ปล่อยผ่านถ้า syntax ผิด */ }
+            }
+        }
+        totalCostEl.addEventListener('blur', evalTotalCost);
+        totalCostEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                evalTotalCost();
+                totalCostEl.blur();
+            }
+        });
         
         // ฟังก์ชันรวบรวมข้อมูลฟอร์ม
         function collectFormData() {
@@ -567,8 +620,93 @@ try {
             };
         }
 
+        // แสดง toast แจ้งเตือน
+        function showToast(msg) {
+            const old = document.querySelector('.validation-toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = 'validation-toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; }, 2200);
+            setTimeout(() => { toast.remove(); }, 2600);
+        }
+
+        // ตรวจสอบความครบถ้วนของ Section 3 และไฮไลต์จุดที่ขาด
+        function validateSection3() {
+            // ล้าง error เดิม
+            document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+
+            const spanFields = [
+                { id: 'worker_count',    label: 'จำนวนผู้ปฏิบัติงาน' },
+                { id: 'work_hours',      label: 'จำนวนเวลาปฏิบัติงาน' },
+                { id: 'downtime_hours',  label: 'เวลาที่เครื่องหยุด' },
+                // { id: 'total_cost',      label: 'ค่าใช้จ่ายทั้งหมด' },
+                { id: 'handled_by_sign', label: 'ลงชื่อช่างผู้รับผิดชอบ' },
+                { id: 'registry_signer', label: 'ลงชื่อผู้ลงประวัติ' },
+                { id: 'mtc_manager',     label: 'ลงชื่อ MTC/MTM' },
+            ];
+            const dateFields = [
+                { id: 'start_date', label: 'วันที่เริ่มปฏิบัติงาน' },
+                { id: 'start_time', label: 'เวลาเริ่มปฏิบัติงาน' },
+                { id: 'end_date',   label: 'วันที่ทำงานเสร็จ' },
+                { id: 'end_time',   label: 'เวลาทำงานเสร็จ' },
+            ];
+
+            const missing = [];
+            let firstEl = null;
+
+            // ตรวจสอบ "โปรดดำเนินการ" (Section 1) — ต้องเลือกอย่างน้อย 1 รายการ
+            const actionChecked = document.querySelector('.action-type-checkbox:checked');
+            if (!actionChecked) {
+                document.querySelectorAll('.action-type-checkbox').forEach(cb => {
+                    cb.closest('.checkbox-item').classList.add('field-error');
+                    cb.addEventListener('change', () => {
+                        document.querySelectorAll('.action-type-checkbox').forEach(c => c.closest('.checkbox-item').classList.remove('field-error'));
+                    }, { once: true });
+                });
+                missing.push('โปรดดำเนินการ (เลือกอย่างน้อย 1 รายการ)');
+                if (!firstEl) firstEl = document.querySelector('.action-type-checkbox');
+            }
+
+            spanFields.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (!el.textContent.trim()) {
+                    el.classList.add('field-error');
+                    missing.push(f.label);
+                    if (!firstEl) firstEl = el;
+                }
+                // ล้าง error เมื่อผู้ใช้พิมพ์
+                el.addEventListener('input', () => el.classList.remove('field-error'), { once: true });
+            });
+
+            dateFields.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (!el.value) {
+                    el.classList.add('field-error');
+                    missing.push(f.label);
+                    if (!firstEl) firstEl = el;
+                }
+                el.addEventListener('change', () => el.classList.remove('field-error'), { once: true });
+            });
+
+            if (missing.length > 0) {
+                showToast('กรุณากรอกให้ครบ: ' + missing[0] + (missing.length > 1 ? ' และอีก ' + (missing.length - 1) + ' รายการ' : ''));
+                if (firstEl) {
+                    firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => firstEl.focus(), 300);
+                }
+                return false;
+            }
+            return true;
+        }
+
         // ฟังก์ชัน send ข้อมูลไปยัง API
         function sendSaveRequest(btn, skipSync) {
+            // ตรวจสอบความครบถ้วนของ Section 3 ก่อนบันทึก (ทั้ง 2 ปุ่ม)
+            if (!validateSection3()) return;
+            // เพื่อให้ตรวจสอบเฉพาะปุ่ม "บันทึกลงประวัติ" เท่านั้น
+            // if (!skipSync && !validateSection3()) return;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
             const formData = collectFormData();

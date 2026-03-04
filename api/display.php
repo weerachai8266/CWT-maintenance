@@ -10,7 +10,7 @@ try {
     $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
     
     // Build SQL query with filters
-    $sql = "SELECT id, division, department, branch, document_no, machine_number, issue, image_before, image_after, reported_by, handled_by, mt_report, status, start_job, end_job, reject_reason
+    $sql = "SELECT id, division, department, branch, document_no, machine_number, issue, image_before, image_after, reported_by, handled_by, mt_report, status, start_job, end_job, reject_reason, cancel_reason
             FROM mt_repair 
             WHERE 1=1";
     
@@ -144,6 +144,9 @@ try {
             $issueHtml = nl2br(htmlspecialchars($row["issue"]));
             if (intval($row["status"]) === STATUS_REJECTED && !empty($row["reject_reason"])) {
                 $issueHtml .= "<br><small class='text-danger'><i class='fas fa-times-circle'></i> <strong>เหตุผล:</strong> " . htmlspecialchars($row["reject_reason"]) . "</small>";
+            }
+            if (intval($row["status"]) === STATUS_CANCELLED && !empty($row["cancel_reason"])) {
+                $issueHtml .= "<br><small class='text-secondary'><i class='fas fa-ban'></i> <strong>เหตุผล:</strong> " . htmlspecialchars($row["cancel_reason"]) . "</small>";
             }
             echo "<td>" . $issueHtml . "</td>";
             

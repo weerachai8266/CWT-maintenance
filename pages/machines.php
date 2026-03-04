@@ -1331,6 +1331,9 @@ require_once '../config/config.php';
                             if (parseInt(repair.status) === 11 && repair.reject_reason) {
                                 issueText += '<br><small class="text-danger"><i class="fas fa-times-circle"></i> <strong>เหตุผล:</strong> ' + repair.reject_reason + '</small>';
                             }
+                            if (parseInt(repair.status) === 50 && repair.cancel_reason) {
+                                issueText += '<br><small class="text-secondary"><i class="fas fa-ban"></i> <strong>เหตุผล:</strong> ' + repair.cancel_reason + '</small>';
+                            }
                             html += '<td>' + issueText + '</td>';
                             var actionTypeMap = { check: 'ตรวจสอบ', fix: 'แก้ไขปัญหา', repair: 'ซ่อม', adjust: 'ปรับตั้ง', other: 'อื่นๆ' };
                             var actionTypeText = actionTypeMap[repair.action_type] || (repair.action_type || '-');
