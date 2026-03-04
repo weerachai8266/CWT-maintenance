@@ -785,14 +785,14 @@ require_once '../config/config.php';
                 </div>
             </div>
 
-            <div class="col-md-2">
+            <!-- <div class="col-md-2">
                 <div class="kpi-card success">
                     <i class="fas fa-bolt kpi-icon"></i>
                     <div class="kpi-label">เวลาตอบสนอง</div>
                     <div class="kpi-value" id="responseTime">0</div>
                     <div class="kpi-detail">นาที</div>
                 </div>
-            </div>
+            </div> -->
         </div>
         
         <!-- KPI Cards Row 3 - Advanced Metrics -->

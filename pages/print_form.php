@@ -310,7 +310,7 @@ try {
                     <div class="section-header" style="border-bottom: 1px solid #000; border-top: 1px solid #000;">3 : บันทึกการดำเนินการซ่อม / สร้าง</div>
                     <div class="section-content">
                         <div class="form-field">
-                            สาเหตุ/การแก้ไขปัญหา
+                            สาเหตุ/การแก้ไข
                         </div>
                         <div>
                             <textarea class="text-area" id="mt_report" rows="3"><?php echo htmlspecialchars($data['mt_report'] ?? ''); ?></textarea>
