@@ -996,7 +996,8 @@ require_once '../config/config.php';
             <div class="col-md-12">
                 <div class="table-container">
                     <h3><i class="fas fa-wrench" style="color: #6f42c1;"></i> MTBF ตามเครื่องจักร (Top 20)</h3>
-                    <p class="text-muted small"><i class="fas fa-info-circle"></i> คลิกที่แถวเพื่อดูประวัติการซ่อม | สีแดง: < 7 วัน, สีเหลือง: < 30 วัน, สีเขียว: >= 30 วัน</p>
+                    <p class="text-muted small"><i class="fas fa-info-circle"></i> คลิกที่แถวเพื่อดูประวัติการซ่อม | สีแดง: &lt; 7 วัน, สีเหลือง: &lt; 30 วัน, สีเขียว: &gt;= 30 วัน</p>
+                    <p class="text-muted small"><i class="fas fa-exclamation-circle text-warning"></i> <strong>หมายเหตุ:</strong> MTBF = (วันที่เสียครั้งล่าสุด − วันที่เสียครั้งแรก) ÷ (จำนวนครั้งที่เสีย − 1) &nbsp;|&nbsp; คำนวณแบบ <strong>Calendar Time</strong> (ช่วงเวลาปฏิทิน) ไม่ใช่ชั่วโมงเดินเครื่องจริง  เพราะระบบไม่มีข้อมูลชั่วโมงเดินเครื่อง &nbsp;|&nbsp; นับเฉพาะ action_type = "ซ่อม" ที่มีอย่างน้อย 2 ครั้งขึ้นไป</p>
                     <div class="table-responsive">
                         <table class="table table-hover" id="mtbfTable">
                             <thead>

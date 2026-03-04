@@ -1,7 +1,6 @@
 <?php
 require_once '../config/config.php';
 require_once '../config/db.php';
-require_once 'sync_repair_to_history.php'; // เพิ่ม auto-sync
 
 // Set JSON header
 header('Content-Type: application/json; charset=utf-8');
@@ -116,12 +115,12 @@ try {
     $stmt->execute();
     
     // 🔥 Auto-sync to machine history when completed (status = 40)
-    if ($status == STATUS_COMPLETED) {
-        $syncResult = syncRepairToHistory($id, $conn);
-        if (!$syncResult) {
-            error_log("Warning: Failed to sync repair ID $id to machine history");
-        }
-    }
+    // if ($status == STATUS_COMPLETED) {
+    //     $syncResult = syncRepairToHistory($id, $conn);
+    //     if (!$syncResult) {
+    //         error_log("Warning: Failed to sync repair ID $id to machine history");
+    //     }
+    // }
     
     // Get status name for response message
     $statusNames = [

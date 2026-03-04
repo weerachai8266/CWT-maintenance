@@ -787,15 +787,17 @@ function updateParetoChart(failureCauses) {
         return;
     }
     
-    // คำนวณ cumulative percentage
+    // คำนวณ total, percentage และ cumulative จาก count จริง
+    const totalCount = failureCauses.reduce((s, c) => s + parseInt(c.count), 0);
     let cumulative = 0;
     const data = failureCauses.map(cause => {
-        cumulative += parseFloat(cause.percentage);
+        const pct = totalCount > 0 ? (parseInt(cause.count) / totalCount) * 100 : 0;
+        cumulative += pct;
         return {
             cause: cause.cause,
             count: parseInt(cause.count),
-            percentage: parseFloat(cause.percentage),
-            cumulative: cumulative
+            percentage: pct,
+            cumulative: Math.min(cumulative, 100)
         };
     });
     
@@ -1322,7 +1324,7 @@ function showStatusDetails(status, statusLabel) {
 
 // Show machine details when clicking on table rows
 $(document).on('click', '#frequentMachinesTable tbody tr, #mtbfTable tbody tr', function() {
-    const machineNumber = $(this).find('td:eq(1) strong').text();
+    const machineNumber = $(this).find('td:eq(1) strong').text().trim();
     if (machineNumber && machineNumber !== '-') {
         showMachineHistory(machineNumber);
     }
@@ -1363,15 +1365,19 @@ function showMachineHistory(machineNumber) {
         method: 'GET',
         data: { machine_number: machineNumber },
         dataType: 'json',
+        timeout: 10000,
         success: function(response) {
             if (response.success && response.data) {
+                const rows = response.data;
+                const totalCost = rows.reduce((s, r) => s + (parseFloat(r.total_cost) || 0), 0);
+                const totalHours = rows.reduce((s, r) => s + (parseFloat(r.work_hours) || parseFloat(r.calc_hours) || 0), 0);
                 let html = `
                     <div class="row mb-3">
                         <div class="col-md-3">
                             <div class="card">
                                 <div class="card-body text-center">
                                     <h6>จำนวนครั้งทั้งหมด</h6>
-                                    <h3 class="text-primary">${response.data.length}</h3>
+                                    <h3 class="text-primary">${rows.length}</h3>
                                 </div>
                             </div>
                         </div>
@@ -1379,7 +1385,7 @@ function showMachineHistory(machineNumber) {
                             <div class="card">
                                 <div class="card-body text-center">
                                     <h6>ซ่อมเสร็จ</h6>
-                                    <h3 class="text-success">${response.data.filter(r => r.status == '40').length}</h3>
+                                    <h3 class="text-success">${rows.filter(r => String(r.status) == '40').length}</h3>
                                 </div>
                             </div>
                         </div>
@@ -1387,7 +1393,7 @@ function showMachineHistory(machineNumber) {
                             <div class="card">
                                 <div class="card-body text-center">
                                     <h6>ค่าใช้จ่ายรวม</h6>
-                                    <h3 class="text-danger">${response.total_cost ? response.total_cost.toLocaleString() : '0'} ฿</h3>
+                                    <h3 class="text-danger">${totalCost.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ฿</h3>
                                 </div>
                             </div>
                         </div>
@@ -1395,7 +1401,7 @@ function showMachineHistory(machineNumber) {
                             <div class="card">
                                 <div class="card-body text-center">
                                     <h6>เวลารวม</h6>
-                                    <h3 class="text-warning">${response.total_hours ? response.total_hours.toFixed(1) : '0'} ชม.</h3>
+                                    <h3 class="text-warning">${totalHours.toFixed(1)} ชม.</h3>
                                 </div>
                             </div>
                         </div>
@@ -1405,31 +1411,44 @@ function showMachineHistory(machineNumber) {
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>เลขที่</th>
                                     <th>วันที่</th>
                                     <th>ปัญหา</th>
                                     <th>สถานะ</th>
                                     <th>ช่าง</th>
-                                    <th>เวลา (ชม.)</th>
+                                    <th class="text-right">เวลา (ชม.)</th>
+                                    <th class="text-right">ค่าใช้จ่าย (฿)</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 
-                response.data.forEach((item, index) => {
-                    const date = new Date(item.start_job).toLocaleDateString('th-TH');
-                    const statusBadge = item.status == '40' ? 'success' : 'warning';
-                    const statusText = item.status == '40' ? 'เสร็จสิ้น' : 'กำลังดำเนินการ';
-                    
-                    html += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${date}</td>
-                            <td>${item.issue || '-'}</td>
-                            <td><span class="badge badge-${statusBadge}">${statusText}</span></td>
-                            <td>${item.handled_by || '-'}</td>
-                            <td>${item.work_hours ? parseFloat(item.work_hours).toFixed(1) : '-'}</td>
-                        </tr>
-                    `;
+                if (rows.length === 0) {
+                    html += '<tr><td colspan="8" class="text-center text-muted">ไม่พบประวัติการซ่อมสำหรับเครื่องนี้</td></tr>';
+                }
+                rows.forEach((item, index) => {
+                    try {
+                        const dateVal = item.start_job ? new Date(item.start_job.replace(' ', 'T')).toLocaleDateString('th-TH') : '-';
+                        const statusMap = { '10': ['secondary','รออนุมัติ'], '11': ['danger','ไม่อนุมัติ'], '20': ['warning','ดำเนินการ'], '30': ['info','รออะไหล่'], '40': ['success','เสร็จสิ้น'], '50': ['dark','ยกเลิก'] };
+                        const [statusBadge, statusText] = statusMap[String(item.status)] || ['secondary', item.status];
+                        const docNo = item.document_no ? `<a href="../pages/print_form.php?id=${item.id}" target="_blank">${item.document_no}</a>` : '-';
+                        const hours = item.work_hours ? parseFloat(item.work_hours).toFixed(1) : (item.calc_hours ? parseFloat(item.calc_hours).toFixed(1) : '-');
+                        const cost = item.total_cost ? parseFloat(item.total_cost).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${docNo}</td>
+                                <td>${dateVal}</td>
+                                <td>${item.issue || '-'}</td>
+                                <td><span class="badge badge-${statusBadge}">${statusText}</span></td>
+                                <td>${item.handled_by || '-'}</td>
+                                <td class="text-right">${hours}</td>
+                                <td class="text-right">${cost}</td>
+                            </tr>
+                        `;
+                    } catch(e) {
+                        console.error('Error rendering row', index, e);
+                    }
                 });
                 
                 html += `
@@ -1440,11 +1459,29 @@ function showMachineHistory(machineNumber) {
                 
                 $('#machineHistoryModal .modal-body').html(html);
             } else {
-                $('#machineHistoryModal .modal-body').html('<p class="text-danger">ไม่พบข้อมูล</p>');
+                $('#machineHistoryModal .modal-body').html('<div class="alert alert-warning">ไม่พบข้อมูลประวัติการซ่อม</div>');
             }
         },
-        error: function() {
-            $('#machineHistoryModal .modal-body').html('<p class="text-danger">เกิดข้อผิดพลาด</p>');
+        error: function(xhr, textStatus, errorThrown) {
+            let msg = 'ไม่สามารถเชื่อมต่อ API ได้';
+            if (textStatus === 'timeout') {
+                msg = 'หมดเวลารอ (timeout)';
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                msg = 'Server response: ' + xhr.responseText.substring(0, 200);
+            }
+            $('#machineHistoryModal .modal-body').html(
+                '<div class="alert alert-danger"><strong>เกิดข้อผิดพลาด [' + xhr.status + ']:</strong> ' + msg + '</div>'
+            );
+        },
+        complete: function(xhr, textStatus) {
+            // Fallback: ถ้า modal ยังแสดง loading อยู่ให้แสดง error
+            if ($('#machineHistoryModal .modal-body .fa-spinner').length > 0) {
+                $('#machineHistoryModal .modal-body').html(
+                    '<div class="alert alert-warning">ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์ (status: ' + textStatus + ')</div>'
+                );
+            }
         }
     });
 }

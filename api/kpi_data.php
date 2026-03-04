@@ -264,8 +264,7 @@ try {
     // ===== 13. สาเหตุการเสีย (Failure Causes) สำหรับ Pareto Chart =====
     $sql_failure_causes = "SELECT 
         issue as cause,
-        COUNT(*) as count,
-        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM mt_repair WHERE $where_clause AND action_type = 'repair') as percentage
+        COUNT(*) as count
         FROM mt_repair
         WHERE $where_clause
         AND action_type = 'repair'
