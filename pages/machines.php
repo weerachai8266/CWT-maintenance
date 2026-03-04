@@ -130,13 +130,17 @@ require_once '../config/config.php';
                 <!-- Filter Box -->
                 <div class="filter-box">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>วันที่แจ้งซ่อม:</label>
                             <input type="date" class="form-control" id="filter_repair_date">
                         </div>
                         <div class="col-md-2">
                             <label>เลขที่:</label>
                             <input type="text" class="form-control" id="filter_document_no" placeholder="ค้นหาเลขที่...">
+                        </div>
+                        <div class="col-md-2">
+                            <label>เครื่องจักร:</label>
+                            <input type="text" class="form-control" id="filter_machine_number" placeholder="ค้นหารหัสเครื่องจักร...">
                         </div>
                         <div class="col-md-2">
                             <label>สถานะ:</label>
@@ -159,7 +163,7 @@ require_once '../config/config.php';
                             </select>
                         </div>
                     
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>&nbsp;</label>
                             <button class="btn btn-primary btn-block" onclick="filterRepairs()">
                                 <i class="fas fa-search"></i> ค้นหา
@@ -176,11 +180,12 @@ require_once '../config/config.php';
                     <table class="table table-striped table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th>เลขที่</th>
+                                <th>เลขที่</th>                                
                                 <th>วันที่แจ้ง</th>
                                 <th>เครื่องจักร</th>
                                 <th>ผู้แจ้ง</th>
                                 <th>ปัญหา</th>
+                                <th>ประเภทงาน</th>
                                 <th>สถานะ</th>
                                 <th>ผู้รับผิดชอบ</th>
                                 <th>ผู้ลงประวัติ</th>
@@ -189,7 +194,7 @@ require_once '../config/config.php';
                         </thead>
                         <tbody id="repairsTableBody">
                             <tr>
-                                <td colspan="9" class="text-center">
+                                <td colspan="10" class="text-center">
                                     <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
                                 </td>
                             </tr>
@@ -1269,7 +1274,7 @@ require_once '../config/config.php';
         var repairsCurrentPage = 1;
         var repairsLimit = 100;
 
-        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '', page = 1) {
+        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '', page = 1, machineNumber = '') {
             repairsCurrentPage = page;
             $.ajax({
                 url: '../api/get_all_repairs.php',
@@ -1280,6 +1285,7 @@ require_once '../config/config.php';
                     document_no: documentNo,
                     status: status,
                     registry_signer: registrySigner,
+                    machine_number: machineNumber,
                     page: page,
                     limit: repairsLimit
                 }),
@@ -1326,6 +1332,9 @@ require_once '../config/config.php';
                                 issueText += '<br><small class="text-danger"><i class="fas fa-times-circle"></i> <strong>เหตุผล:</strong> ' + repair.reject_reason + '</small>';
                             }
                             html += '<td>' + issueText + '</td>';
+                            var actionTypeMap = { check: 'ตรวจสอบ', fix: 'แก้ไขปัญหา', repair: 'ซ่อม', adjust: 'ปรับตั้ง', other: 'อื่นๆ' };
+                            var actionTypeText = actionTypeMap[repair.action_type] || (repair.action_type || '-');
+                            html += '<td>' + actionTypeText + '</td>';
                             html += '<td>' + statusBadge + '</td>';
                             html += '<td>' + (repair.handled_by || '-') + '</td>';
                             html += '<td>' + (repair.registry_signer || '-') + '</td>';
@@ -1338,7 +1347,7 @@ require_once '../config/config.php';
                             html += '</tr>';
                         });
                     } else {
-                        html = '<tr><td colspan="9" class="text-center">ไม่พบข้อมูล</td></tr>';
+                        html = '<tr><td colspan="10" class="text-center">ไม่พบข้อมูล</td></tr>';
                     }
                     $('#repairsTableBody').html(html);
 
@@ -1346,7 +1355,7 @@ require_once '../config/config.php';
                     renderRepairsPagination(total, totalPages, currentPage);
                 },
                 error: function() {
-                    $('#repairsTableBody').html('<tr><td colspan="9" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+                    $('#repairsTableBody').html('<tr><td colspan="10" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
                     $('#repairsPaginationWrap').hide();
                 }
             });
@@ -1402,18 +1411,20 @@ require_once '../config/config.php';
             const documentNo     = $('#filter_document_no').val();
             const status         = $('#filter_status').val();
             const registrySigner = $('#filter_registry_signer').val();
-            loadRepairs(repairDate, documentNo, status, registrySigner, page);
+            const machineNumber  = $('#filter_machine_number').val();
+            loadRepairs(repairDate, documentNo, status, registrySigner, page, machineNumber);
             // Scroll table into view
             $('html, body').animate({ scrollTop: $('#repairsTableBody').offset().top - 80 }, 200);
         }
 
         // Filter repairs
         function filterRepairs() {
-            const repairDate = $('#filter_repair_date').val();
-            const documentNo = $('#filter_document_no').val();
-            const status = $('#filter_status').val();
+            const repairDate     = $('#filter_repair_date').val();
+            const documentNo     = $('#filter_document_no').val();
+            const status         = $('#filter_status').val();
             const registrySigner = $('#filter_registry_signer').val();
-            loadRepairs(repairDate, documentNo, status, registrySigner, 1);
+            const machineNumber  = $('#filter_machine_number').val();
+            loadRepairs(repairDate, documentNo, status, registrySigner, 1, machineNumber);
         }
 
         function clearFilters() {
@@ -1421,7 +1432,8 @@ require_once '../config/config.php';
             $('#filter_document_no').val('');
             $('#filter_status').val('');
             $('#filter_registry_signer').val('');
-            loadRepairs('', '', '', '', 1);
+            $('#filter_machine_number').val('');
+            loadRepairs('', '', '', '', 1, '');
         }
 
         // Print repair form

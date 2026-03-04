@@ -156,12 +156,13 @@ try {
     // Check if any row was affected
     $skip_sync = isset($data['skip_sync']) && $data['skip_sync'] === true;
 
+    // sync ไปยัง history เฉพาะเมื่อผู้ใช้กดปุ่ม "บันทึกลงประวัติ" โดยตรง
+    // ทำก่อนเช็ค rowCount เพื่อให้ sync ได้แม้ข้อมูลไม่มีการเปลี่ยนแปลง
+    if (!$skip_sync) {
+        syncRepairToHistory($id, $conn);
+    }
+
     if ($stmt->rowCount() > 0) {
-        // sync ไปยัง history เฉพาะเมื่อผู้ใช้กดปุ่ม "บันทึกลงประวัติ" โดยตรง (ไม่ auto-sync ตามสถานะ)
-        if (!$skip_sync) {
-            syncRepairToHistory($id, $conn);
-        }
-        
         json_response(true, 'บันทึกข้อมูลเรียบร้อยแล้ว', ['id' => $id]);
     } else {
         json_response(true, 'ไม่มีการเปลี่ยนแปลงข้อมูล', ['id' => $id]);
