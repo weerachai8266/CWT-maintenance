@@ -131,6 +131,16 @@ try {
             25%       { transform: translateX(-5px); }
             75%       { transform: translateX(5px); }
         }
+        /* Placeholder สำหรับ contenteditable — ซ่อนตอนพิมพ์ */
+        [data-placeholder]:empty::before {
+            content: attr(data-placeholder);
+            color: #bc3545;
+            font-style: italic;
+            pointer-events: none;
+        }
+        @media print {
+            [data-placeholder]::before { display: none !important; }
+        }
         .validation-toast {
             position: fixed;
             top: 60px;
@@ -374,7 +384,7 @@ try {
                             จำนวนเวลาในการปฏิบัติงาน <span contenteditable="true" class="underline-field" id="work_hours" style="min-width: 175px;"><?php echo htmlspecialchars($data['work_hours'] ?? ''); ?></span> ช.ม.
                         </div>
                         <div class="form-field">
-                            จำนวนเวลาที่เครื่องจักรทำการผลิตไม่ได้ <span contenteditable="true" class="underline-field" id="downtime_hours" style="min-width: 115px;"><?php echo htmlspecialchars($data['downtime_hours'] ?? ''); ?></span> ช.ม.
+                            จำนวนเวลาที่เครื่องจักรทำการผลิตไม่ได้ <span contenteditable="true" class="underline-field" id="downtime_hours" data-placeholder="หากไม่มีให้ใส่ 0" style="min-width: 115px;"><?php echo htmlspecialchars($data['downtime_hours'] ?? ''); ?></span> ช.ม.
                         </div>
                         <div class="form-field">
                             <div>วันที่เริ่มปฏิบัติงาน <input type="date" id="start_date" class="date-input" <?php if($section3_start_date) echo 'value="' . htmlspecialchars($section3_start_date) . '"'; ?>> 
@@ -385,7 +395,7 @@ try {
                             เวลา <input type="time" id="end_time" class="time-input" <?php if($section3_end_time) echo 'value="' . htmlspecialchars($section3_end_time) . '"'; ?>></div>
                         </div>                        
                         <div class="form-field">
-                            ค่าใช้จ่ายทั้งหมด <span contenteditable="true" class="underline-field" id="total_cost" style="min-width: 235px;"><?php echo htmlspecialchars($data['total_cost'] ?? ''); ?></span> บาท
+                            ค่าใช้จ่ายทั้งหมด <span contenteditable="true" class="underline-field" id="total_cost" data-placeholder="หากไม่มีให้ใส่ 0" style="min-width: 235px;"><?php echo htmlspecialchars($data['total_cost'] ?? ''); ?></span> บาท
                         </div>
                         <div class="form-field">
                             ลงชื่อ <span contenteditable="true" class="underline-field" id="handled_by_sign" style="min-width: 220px;"><?php echo htmlspecialchars($data['handled_by']); ?></span> ( ช่างผู้รับผิดชอบ )
@@ -641,7 +651,7 @@ try {
                 { id: 'worker_count',    label: 'จำนวนผู้ปฏิบัติงาน' },
                 { id: 'work_hours',      label: 'จำนวนเวลาปฏิบัติงาน' },
                 { id: 'downtime_hours',  label: 'เวลาที่เครื่องหยุด' },
-                // { id: 'total_cost',      label: 'ค่าใช้จ่ายทั้งหมด' },
+                { id: 'total_cost',      label: 'ค่าใช้จ่ายทั้งหมด' },
                 { id: 'handled_by_sign', label: 'ลงชื่อช่างผู้รับผิดชอบ' },
                 { id: 'registry_signer', label: 'ลงชื่อผู้ลงประวัติ' },
                 { id: 'mtc_manager',     label: 'ลงชื่อ MTC/MTM' },
