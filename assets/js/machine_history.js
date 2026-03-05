@@ -252,76 +252,111 @@ function viewHistoryDetail(id) {
 
 function showHistoryDetailModal(data) {
     var workTypeMap = {
-        'PM':  'PM (Preventive Maintenance)',
-        'CAL': 'Calibration',
-        'OVH': 'Overhaul (ยกเครื่องใหม่)',
-        'INS': 'ตรวจสอบ (Inspection)',
-        'RPR': 'ซ่อม (Repair)'
+        'PM':  { label: 'PM - Preventive Maintenance', color: 'badge-primary',  icon: 'fa-tools' },
+        'CAL': { label: 'CAL - Calibration',           color: 'badge-info',     icon: 'fa-ruler-combined' },
+        'OVH': { label: 'OVH - Overhaul',              color: 'badge-warning',  icon: 'fa-cogs' },
+        'INS': { label: 'INS - Inspection',            color: 'badge-secondary',icon: 'fa-search' },
+        'RPR': { label: 'RPR - Repair',                color: 'badge-danger',   icon: 'fa-wrench' }
     };
     var statusMap = {
-        'pending':     '<span class="badge badge-warning">ดำเนินการ</span>',
-        'in-progress': '<span class="badge badge-info">กำลังดำเนินการ</span>',
-        'completed':   '<span class="badge badge-success">เสร็จสิ้น</span>',
-        'cancelled':   '<span class="badge badge-danger">ยกเลิก</span>'
+        'pending':     { label: 'รอดำเนินการ',   color: 'badge-secondary' },
+        'in-progress': { label: 'กำลังดำเนินการ', color: 'badge-info'      },
+        'completed':   { label: 'เสร็จสิ้น',      color: 'badge-success'   },
+        'cancelled':   { label: 'ยกเลิก',         color: 'badge-danger'    }
     };
+
+    var wt     = workTypeMap[data.work_type]  || { label: data.work_type || '-',  color: 'badge-secondary', icon: 'fa-file-alt' };
+    var st     = statusMap[data.status]       || { label: data.status    || '-',  color: 'badge-secondary' };
+
+    // helper: render a labelled value cell
+    function cell(label, value, bold) {
+        return '<div class="mb-2">' +
+               '<div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;">' + label + '</div>' +
+               '<div class="' + (bold ? 'font-weight-bold' : '') + '" style="font-size:.95rem;">' + (value || '-') + '</div>' +
+               '</div>';
+    }
 
     var html = '';
 
-    // ข้อมูลเครื่องจักร
-    html += '<div class="row mb-3">';
-    html += '<div class="col-md-6"><label class="text-muted small mb-1">รหัสเครื่องจักร</label><div class="font-weight-bold">' + (data.machine_code || '-') + '</div></div>';
-    html += '<div class="col-md-6"><label class="text-muted small mb-1">ชื่อเครื่องจักร</label><div>' + (data.machine_name || '-') + '</div></div>';
+    /* ── Header banner ── */
+    html += '<div class="rounded p-3 mb-3" style="background:linear-gradient(135deg,#1a237e 0%,#283593 100%);color:#fff;">';
+    html +=   '<div class="d-flex align-items-center justify-content-between flex-wrap">';
+    html +=     '<div>';
+    html +=       '<div style="font-size:1.1rem;font-weight:700;letter-spacing:.03em;">' +
+                    '<i class="fas fa-microchip mr-2"></i>' + (data.machine_code || '-') + '</div>';
+    html +=       '<div style="opacity:.85;font-size:.9rem;">' + (data.machine_name || '') + '</div>';
+    html +=     '</div>';
+    html +=     '<div class="text-right">';
+    html +=       '<span class="badge badge-light text-dark px-2 py-1 mr-1" style="font-size:.85rem;">' +
+                    '<i class="fas ' + wt.icon + ' mr-1"></i>' + wt.label + '</span>';
+    html +=       '<span class="badge ' + st.color + ' px-2 py-1" style="font-size:.85rem;">' + st.label + '</span>';
+    html +=     '</div>';
+    html +=   '</div>';
     html += '</div>';
 
-    // ประเภทงาน / เลขที่เอกสาร / วันที่
-    html += '<div class="row mb-3">';
-    html += '<div class="col-md-4"><label class="text-muted small mb-1">ประเภทงาน</label><div><span class="badge badge-primary">' + (workTypeMap[data.work_type] || data.work_type || '-') + '</span></div></div>';
-    html += '<div class="col-md-4"><label class="text-muted small mb-1">เลขที่เอกสาร</label><div class="font-weight-bold">' + (data.document_no || '-') + '</div></div>';
-    html += '<div class="col-md-4"><label class="text-muted small mb-1">วันที่แจ้ง/ทำงาน</label><div>' + formatDateDMY(data.work_date) + '</div></div>';
+    /* ── Document info strip ── */
+    html += '<div class="d-flex flex-wrap border rounded mb-3" style="background:#f8f9fa;">';
+    html +=   '<div class="px-3 py-2 border-right flex-fill">' + cell('เลขที่เอกสาร', '<span style="color:#1565c0;font-size:1rem;">' + (data.document_no || '-') + '</span>', true) + '</div>';
+    html +=   '<div class="px-3 py-2 border-right flex-fill">' + cell('วันที่แจ้ง / ทำงาน', '<i class="fas fa-calendar-alt mr-1 text-muted"></i>' + formatDateDMY(data.work_date)) + '</div>';
+    html +=   '<div class="px-3 py-2 border-right flex-fill">' + cell('เริ่มปฏิบัติงาน',   '<i class="fas fa-play-circle mr-1 text-success"></i>' + formatDateTimeTH(data.start_date)) + '</div>';
+    html +=   '<div class="px-3 py-2 flex-fill">'              + cell('เสร็จสิ้น',          '<i class="fas fa-flag-checkered mr-1 text-danger"></i>' + formatDateTimeTH(data.completed_date)) + '</div>';
     html += '</div>';
 
-    html += '<hr>';
+    /* ── รายละเอียดงาน ── */
+    function textBox(label, icon, value, color) {
+        color = color || '#495057';
+        return '<div class="mb-3">' +
+               '<div class="font-weight-bold mb-1" style="color:' + color + ';">' +
+               '<i class="fas ' + icon + ' mr-1"></i>' + label + '</div>' +
+               '<div class="border rounded p-2" style="background:#fff;white-space:pre-wrap;min-height:56px;font-size:.9rem;line-height:1.6;">' +
+               nl2br(value || '<span class="text-muted">-</span>') + '</div></div>';
+    }
 
-    // รายละเอียดงาน
-    html += '<div class="form-group"><label class="font-weight-bold">อาการเสีย/ปัญหา/รายละเอียด</label>';
-    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:60px;">' + nl2br(data.issue_description || '-') + '</div></div>';
+    html += textBox('อาการเสีย / ปัญหา / รายละเอียด', 'fa-exclamation-triangle', data.issue_description, '#c62828');
+    html += textBox('วิธีแก้ไข / การซ่อม',             'fa-check-circle',         data.solution_description, '#2e7d32');
+    html += textBox('รายการอะไหล่ที่ใช้',               'fa-box-open',             data.parts_used, '#1565c0');
 
-    html += '<div class="form-group"><label class="font-weight-bold">วิธีแก้ไข/การซ่อม</label>';
-    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:60px;">' + nl2br(data.solution_description || '-') + '</div></div>';
-
-    html += '<div class="form-group"><label class="font-weight-bold">รายการอะไหล่ที่ใช้/รหัสอะไหล่</label>';
-    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:40px;">' + nl2br(data.parts_used || '-') + '</div></div>';
-
-    html += '<hr>';
-
-    // เวลาและค่าใช้จ่าย
-    html += '<h6 class="mt-3 mb-2"><i class="fas fa-clock"></i> เวลาและค่าใช้จ่าย</h6>';
+    /* ── เวลา + ค่าใช้จ่าย ── */
     html += '<div class="row mb-3">';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาเริ่มปฏิบัติงาน</label><div>' + formatDateTimeTH(data.start_date) + '</div></div>';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาปฏิบัติงานเสร็จ</label><div>' + formatDateTimeTH(data.completed_date) + '</div></div>';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาปฏิบัติงาน (ชั่วโมง)</label><div>' + (data.work_hours || '0') + ' ชม.</div></div>';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">เวลาหยุดเครื่อง (ชั่วโมง)</label><div>' + (data.downtime_hours || '0') + ' ชม.</div></div>';
-    html += '</div>';
-    html += '<div class="row mb-3">';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">ค่าแรง (บาท)</label><div>' + formatCurrency(data.labor_cost) + '</div></div>';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">ค่าอะไหล่ (บาท)</label><div>' + formatCurrency(data.parts_cost) + '</div></div>';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">ค่าใช้จ่ายอื่นๆ (บาท)</label><div>' + formatCurrency(data.other_cost) + '</div></div>';
-    html += '<div class="col-md-3"><label class="text-muted small mb-1">รวมค่าใช้จ่าย (บาท)</label><div class="font-weight-bold text-primary">' + formatCurrency(data.total_cost) + '</div></div>';
+    html +=   '<div class="col-12"><div class="font-weight-bold text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;">' +
+              '<i class="fas fa-clock mr-1"></i>เวลาปฏิบัติงาน</div></div>';
+
+    html +=   '<div class="col-6 col-md-3">';
+    html +=     '<div class="border rounded text-center py-2 mb-2" style="background:#e8f5e9;">';
+    html +=       '<div class="text-muted" style="font-size:.72rem;">ชั่วโมงปฏิบัติงาน</div>';
+    html +=       '<div class="font-weight-bold" style="font-size:1.4rem;color:#2e7d32;">' + (data.work_hours || '0') + '</div>';
+    html +=       '<div class="text-muted" style="font-size:.72rem;">ชั่วโมง</div>';
+    html +=     '</div>';
+    html +=   '</div>';
+
+    html +=   '<div class="col-6 col-md-3">';
+    html +=     '<div class="border rounded text-center py-2 mb-2" style="background:#fce4ec;">';
+    html +=       '<div class="text-muted" style="font-size:.72rem;">เวลาหยุดเครื่อง</div>';
+    html +=       '<div class="font-weight-bold" style="font-size:1.4rem;color:#c62828;">' + (data.downtime_hours || '0') + '</div>';
+    html +=       '<div class="text-muted" style="font-size:.72rem;">ชั่วโมง</div>';
+    html +=     '</div>';
+    html +=   '</div>';
+
+    html +=   '<div class="col-12 col-md-6">';
+    html +=     '<div class="border rounded p-2 mb-2" style="background:#fff8e1;">';
+    html +=       '<div class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;">ค่าใช้จ่าย (บาท)</div>';
+    html +=       '<div class="d-flex justify-content-between flex-wrap">';
+    html +=         '<span><span class="text-muted" style="font-size:.8rem;">ค่าแรง</span><br><strong>' + formatCurrency(data.labor_cost) + '</strong></span>';
+    html +=         '<span><span class="text-muted" style="font-size:.8rem;">ค่าอะไหล่</span><br><strong>' + formatCurrency(data.parts_cost) + '</strong></span>';
+    html +=         '<span><span class="text-muted" style="font-size:.8rem;">อื่นๆ</span><br><strong>' + formatCurrency(data.other_cost) + '</strong></span>';
+    html +=         '<span class="border-left pl-2 ml-1"><span class="text-muted" style="font-size:.8rem;">รวม</span><br>' +
+                    '<strong style="font-size:1.05rem;color:#1565c0;">' + formatCurrency(data.total_cost) + '</strong></span>';
+    html +=       '</div>';
+    html +=     '</div>';
+    html +=   '</div>';
     html += '</div>';
 
-    html += '<hr>';
-
-    // ผู้เกี่ยวข้อง
-    html += '<h6 class="mt-3 mb-2"><i class="fas fa-users"></i> ผู้เกี่ยวข้อง</h6>';
-    html += '<div class="row mb-3">';
-    html += '<div class="col-md-4"><label class="text-muted small mb-1">ผู้แจ้ง</label><div>' + (data.reported_by || '-') + '</div></div>';
-    html += '<div class="col-md-4"><label class="text-muted small mb-1">ผู้รับผิดชอบ/ช่าง</label><div>' + (data.handled_by || '-') + '</div></div>';
-    html += '<div class="col-md-4"><label class="text-muted small mb-1">สถานะ</label><div>' + (statusMap[data.status] || data.status || '-') + '</div></div>';
+    /* ── ผู้เกี่ยวข้อง + หมายเหตุ ── */
+    html += '<div class="row">';
+    html +=   '<div class="col-md-4">' + cell('<i class="fas fa-bullhorn mr-1"></i> ผู้แจ้ง', '<span class="font-weight-bold">' + (data.reported_by || '-') + '</span>') + '</div>';
+    html +=   '<div class="col-md-4">' + cell('<i class="fas fa-hard-hat mr-1"></i> ผู้รับผิดชอบ / ช่าง', '<span class="font-weight-bold">' + (data.handled_by || '-') + '</span>') + '</div>';
+    html +=   '<div class="col-md-4">' + cell('<i class="fas fa-sticky-note mr-1"></i> หมายเหตุ', nl2br(data.note) || '-') + '</div>';
     html += '</div>';
-
-    // หมายเหตุ
-    html += '<div class="form-group"><label class="font-weight-bold">หมายเหตุ</label>';
-    html += '<div class="border rounded p-2 bg-light" style="white-space:pre-wrap;min-height:40px;">' + nl2br(data.note || '-') + '</div></div>';
 
     $('#historyDetailContent').html(html);
     $('#historyDetailModal').data('history-id', data.id);
