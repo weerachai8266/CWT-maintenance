@@ -505,3 +505,109 @@ function exportMachineHistory() {
     // เปิดหน้าต่างใหม่เพื่อ download Excel
     window.open('../api/export_machine_history.php?machine_code=' + encodeURIComponent(machineCode), '_blank');
 }
+
+// ==================== Tab 4: Machine History Dropdown + Info ====================
+var machinesData = [];
+
+function loadMachinesDropdown() {
+    $.ajax({
+        url: '../api/machines.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                machinesData = response.data;
+                var options = '';
+                response.data.forEach(function(machine) {
+                    options += '<option value="' + machine.machine_code + '">' +
+                               machine.machine_code + ' - ' + machine.machine_name + '</option>';
+                });
+                $('#history_machine_datalist').html(options);
+            }
+        }
+    });
+}
+
+function showMachineHistory(machineId, machineCode) {
+    $.ajax({
+        url: '../api/machines.php?id=' + machineId,
+        method: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                displayMachineInfo(response.data);
+                loadMachineHistoryByCode(machineCode);
+            }
+        }
+    });
+}
+
+function displayMachineInfo(machine) {
+    var statusClassMap = { active: 'badge-success', maintenance: 'badge-warning', broken: 'badge-danger', retired: 'badge-secondary' };
+    var statusClass = statusClassMap[machine.machine_status] || 'badge-info';
+    $('#machine_status_badge').html('<strong>สถานะ: </strong><span class="badge ' + statusClass + ' badge-lg">' + getStatusText(machine.machine_status) + '</span>');
+
+    var price = '-';
+    if (machine.purchase_price) {
+        price = parseFloat(machine.purchase_price).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+    }
+
+    var purchaseDate  = formatDateDMY(machine.purchase_date);
+    var startDate     = formatDateDMY(machine.start_date);
+    var registerDate  = formatDateDMY(machine.register_date);
+
+    var infoHtml = '<div class="row mb-3">' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>ชื่อเครื่องจักร:</strong></div><div class="col-7">' + (machine.machine_name || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>บริษัทผู้ผลิต:</strong></div><div class="col-7">' + (machine.manufacturer || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>ราคาซื้อ:</strong></div><div class="col-7">' + price + '</div></div></div>' +
+        '</div>' +
+        '<div class="row mb-3">' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>รหัส:</strong></div><div class="col-7">' + (machine.machine_code || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>ผู้แทนจำหน่าย:</strong></div><div class="col-7">' + (machine.supplier || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>วันที่ซื้อ:</strong></div><div class="col-7">' + purchaseDate + '</div></div></div>' +
+        '</div>' +
+        '<div class="row mb-3">' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>หน่วยงานที่รับผิดชอบ:</strong></div><div class="col-7">' + (machine.responsible_dept || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>รุ่น:</strong></div><div class="col-7">' + (machine.model || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>วันที่เริ่มใช้งาน:</strong></div><div class="col-7">' + startDate + '</div></div></div>' +
+        '</div>' +
+        '<div class="row mb-3">' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>พื้นที่ใช้งาน:</strong></div><div class="col-7">' + (machine.work_area || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>ขนาด:</strong></div><div class="col-7">' + (machine.horsepower || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>วันที่ขึ้นทะเบียน:</strong></div><div class="col-7">' + registerDate + '</div></div></div>' +
+        '</div>' +
+        '<div class="row">' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>ประเภทเครื่องจักร:</strong></div><div class="col-7">' + (machine.machine_type || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>น้ำหนัก:</strong></div><div class="col-7">' + (machine.weight || '-') + '</div></div></div>' +
+        '<div class="col-md-4"><div class="row"><div class="col-5 text-right"><strong>เบอร์โทรติดต่อ:</strong></div><div class="col-7">' + (machine.contact_phone || '-') + '</div></div></div>' +
+        '</div>';
+
+    $('#machine_current_info').html(infoHtml);
+    $('#machine_info_card').show();
+}
+
+function getStatusText(status) {
+    var map = { active: 'ใช้งาน', maintenance: 'ซ่อมบำรุง', broken: 'ชำรุด', retired: 'เลิกใช้งาน' };
+    return map[status] || status || 'ไม่ระบุ';
+}
+
+// Event bindings for Tab 4
+$(document).ready(function() {
+    $('#reserve2-tab').on('shown.bs.tab', function() {
+        loadMachinesDropdown();
+    });
+
+    $('#btn_show_history').on('click', function() {
+        var machineCode = $('#history_machine_select_input').val().trim();
+        if (!machineCode) {
+            alert('กรุณาพิมพ์หรือเลือกรหัสเครื่องจักร');
+            return;
+        }
+        var machine = machinesData.find(function(m) { return m.machine_code === machineCode; });
+        if (!machine) {
+            alert('ไม่พบรหัสเครื่องจักรนี้');
+            return;
+        }
+        showMachineHistory(machine.id, machineCode);
+    });
+});
