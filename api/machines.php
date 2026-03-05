@@ -25,8 +25,53 @@ try {
                 } else {
                     echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูล']);
                 }
+            } elseif (isset($_GET['page'])) {
+                // Server-side pagination + filters
+                $page   = max(1, intval($_GET['page']));
+                $limit  = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 30;
+                $offset = ($page - 1) * $limit;
+
+                $where  = 'WHERE 1=1';
+                $params = [];
+
+                if (!empty($_GET['branch'])) {
+                    $where .= ' AND branch = :branch';
+                    $params[':branch'] = $_GET['branch'];
+                }
+                if (!empty($_GET['code'])) {
+                    $where .= ' AND (machine_code LIKE :code OR machine_number LIKE :code2)';
+                    $params[':code']  = '%' . $_GET['code'] . '%';
+                    $params[':code2'] = '%' . $_GET['code'] . '%';
+                }
+                if (!empty($_GET['brand'])) {
+                    $where .= ' AND brand LIKE :brand';
+                    $params[':brand'] = '%' . $_GET['brand'] . '%';
+                }
+                if (!empty($_GET['model'])) {
+                    $where .= ' AND model LIKE :model';
+                    $params[':model'] = '%' . $_GET['model'] . '%';
+                }
+
+                $cnt = $conn->prepare("SELECT COUNT(*) FROM mt_machines $where");
+                foreach ($params as $k => $v) $cnt->bindValue($k, $v);
+                $cnt->execute();
+                $total = (int)$cnt->fetchColumn();
+
+                $stmt = $conn->prepare("SELECT * FROM mt_machines $where ORDER BY machine_code ASC LIMIT :limit OFFSET :offset");
+                foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+                $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
+                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+                $stmt->execute();
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                echo json_encode(['success' => true, 'data' => [
+                    'rows'        => $data,
+                    'total'       => $total,
+                    'total_pages' => (int)ceil($total / $limit),
+                    'page'        => $page
+                ]]);
             } else {
-                // ดึงข้อมูลทั้งหมด
+                // ดึงข้อมูลทั้งหมด (ใช้สำหรับ dropdown)
                 $sql = "SELECT * FROM mt_machines ORDER BY machine_code ASC";
                 $stmt = $conn->query($sql);
                 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);

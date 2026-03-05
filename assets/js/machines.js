@@ -59,68 +59,102 @@ $(document).on('hidden.bs.modal', '#machineModal', function() {
     if ($trigger && $trigger.length) $trigger.focus();
 });
 
-// โหลดรายการเครื่องจักร
-function loadMachines() {
+// Pagination state
+var machinesCurrentPage = 1;
+var machinesLimit = 30;
+
+// โหลดรายการเครื่องจักร (server-side pagination)
+function loadMachines(page) {
+    page = page || 1;
+    machinesCurrentPage = page;
+
     // โหลดสาขาสำหรับ filter dropdown (เฉพาะครั้งแรก)
     if ($('#filter_branch option').length <= 1) {
         loadBranches('#filter_branch', 'ทั้งหมด');
     }
-    
+
+    var params = {
+        page:   page,
+        limit:  machinesLimit,
+        branch: $('#filter_branch').val(),
+        code:   $('#filter_code').val(),
+        brand:  $('#filter_brand').val(),
+        model:  $('#filter_model').val()
+    };
+
     $.ajax({
         url: '../api/machines.php',
         method: 'GET',
+        data: params,
         dataType: 'json',
         success: function(response) {
-            if (response.success) {
-                // เรียงตามประเภทก่อน แล้วตามรหัส
-                response.data.sort(function(a, b) {
-                    if (a.machine_type !== b.machine_type) {
-                        return a.machine_type.localeCompare(b.machine_type);
-                    }
-                    return a.machine_code.localeCompare(b.machine_code);
-                });
-                displayMachines(response.data);
+            if (response.success && response.data && response.data.rows) {
+                var d = response.data;
+                displayMachines(d.rows);
+                renderMachinesPagination(d.total, d.total_pages, d.page);
             } else {
                 $('#machineList').html('<div class="alert alert-warning">ไม่พบข้อมูล</div>');
+                $('#machinesPaginationWrap').hide();
             }
         },
         error: function() {
             $('#machineList').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>');
+            $('#machinesPaginationWrap').hide();
         }
     });
 }
 
-// กรองข้อมูล
+// กรองข้อมูล → reload page 1
 function filterMachines() {
-    const filterType = $('#filter_type').val().toLowerCase();
-    const filterCode = $('#filter_code').val().toLowerCase();
-    const filterBrand = $('#filter_brand').val().toLowerCase();
-    const filterModel = $('#filter_model').val().toLowerCase();
-    const filterBranch = $('#filter_branch').val(); // name (string or empty)
+    loadMachines(1);
+}
 
-    $('#machineList tbody tr').each(function() {
-        const row = $(this);
-        
-        // ใช้ data attribute แทนการอ้างอิง td:eq() เพราะตำแหน่งอาจเปลี่ยนเมื่อมี checkbox
-        const type = (row.data('type') || '').toString().toLowerCase();
-        const code = (row.data('machine-code') || '').toString().toLowerCase();
-        const number = (row.data('number') || '').toString().toLowerCase();
-        const brand = (row.data('brand') || '').toString().toLowerCase();
-        const model = (row.data('model') || '').toString().toLowerCase();
-        const branchName = row.data('branch') || '';
+// ไปหน้า
+function goMachinesPage(page) {
+    loadMachines(page);
+    $('html, body').animate({ scrollTop: $('#machineList').offset().top - 80 }, 200);
+}
 
-        const matchType = !filterType || type.includes(filterType);
-        const matchCode = !filterCode || code.includes(filterCode) || number.includes(filterCode);
-        const matchBrand = !filterBrand || brand.includes(filterBrand);
-        const matchModel = !filterModel || model.includes(filterModel);
-        const matchBranch = !filterBranch || (branchName == filterBranch);
+// Render pagination
+function renderMachinesPagination(total, totalPages, currentPage) {
+    var $wrap  = $('#machinesPaginationWrap');
+    var $info  = $('#machinesPaginationInfo');
+    var $pager = $('#machinesPagination');
 
-        if (matchType && matchCode && matchBrand && matchModel && matchBranch) {
-            row.show();
-        } else {
-            row.hide();
-        }
-    });
+    if (totalPages <= 1) {
+        $info.text('ทั้งหมด ' + total + ' รายการ');
+        $pager.html('');
+        $wrap.show();
+        return;
+    }
+
+    var start = (currentPage - 1) * machinesLimit + 1;
+    var end   = Math.min(currentPage * machinesLimit, total);
+    $info.text('แสดง ' + start + '-' + end + ' จาก ' + total + ' รายการ');
+
+    var pages = '';
+    pages += '<li class="page-item' + (currentPage === 1 ? ' disabled' : '') + '">' +
+             '<a class="page-link" href="#" onclick="goMachinesPage(' + (currentPage - 1) + ');return false;">&laquo;</a></li>';
+
+    var sp = Math.max(1, currentPage - 2);
+    var ep = Math.min(totalPages, currentPage + 2);
+    if (sp > 1) {
+        pages += '<li class="page-item"><a class="page-link" href="#" onclick="goMachinesPage(1);return false;">1</a></li>';
+        if (sp > 2) pages += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+    }
+    for (var p = sp; p <= ep; p++) {
+        pages += '<li class="page-item' + (p === currentPage ? ' active' : '') + '">' +
+                 '<a class="page-link" href="#" onclick="goMachinesPage(' + p + ');return false;">' + p + '</a></li>';
+    }
+    if (ep < totalPages) {
+        if (ep < totalPages - 1) pages += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+        pages += '<li class="page-item"><a class="page-link" href="#" onclick="goMachinesPage(' + totalPages + ');return false;">' + totalPages + '</a></li>';
+    }
+    pages += '<li class="page-item' + (currentPage === totalPages ? ' disabled' : '') + '">' +
+             '<a class="page-link" href="#" onclick="goMachinesPage(' + (currentPage + 1) + ');return false;">&raquo;</a></li>';
+
+    $pager.html(pages);
+    $wrap.show();
 }
 
 // แสดงรายการเครื่องจักร

@@ -42,6 +42,11 @@ try {
         }
     }
 
+    if (!empty($filters['job_type'])) {
+        $where .= " AND action_type = :job_type";
+        $params[':job_type'] = $filters['job_type'];
+    }
+
     // Pagination
     $page  = isset($filters['page'])  ? max(1, intval($filters['page']))  : 1;
     $limit = isset($filters['limit']) ? max(1, intval($filters['limit'])) : 30;

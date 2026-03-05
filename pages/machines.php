@@ -134,13 +134,24 @@ require_once '../config/config.php';
                             <label>วันที่แจ้งซ่อม:</label>
                             <input type="date" class="form-control" id="filter_repair_date">
                         </div>
-                        <div class="col-md-2">
+                        <!-- <div class="col-md-2">
                             <label>เลขที่:</label>
                             <input type="text" class="form-control" id="filter_document_no" placeholder="ค้นหาเลขที่...">
-                        </div>
+                        </div> -->
                         <div class="col-md-2">
                             <label>เครื่องจักร:</label>
                             <input type="text" class="form-control" id="filter_machine_number" placeholder="ค้นหารหัสเครื่องจักร...">
+                        </div>
+                        <div class="col-md-2">
+                            <label>ประเภทงาน:</label>
+                            <select class="form-control" id="filter_job_type">
+                                <option value="">ทั้งหมด</option>
+                                <option value="check">ตรวจเช็ค</option>
+                                <option value="fix">แก้ไข</option>
+                                <option value="repair">ซ่อม</option>
+                                <option value="adjust">ปรับตั้ง</option>
+                                <option value="other">อื่นๆ</option>
+                            </select>
                         </div>
                         <div class="col-md-2">
                             <label>สถานะ:</label>
@@ -285,6 +296,11 @@ require_once '../config/config.php';
                                 <i class="fas fa-spinner fa-spin fa-2x"></i>
                                 <p>กำลังโหลดข้อมูล...</p>
                             </div>
+                        </div>
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-between align-items-center mt-2" id="machinesPaginationWrap" style="display:none!important;">
+                            <span id="machinesPaginationInfo" class="text-muted small"></span>
+                            <ul class="pagination pagination-sm mb-0" id="machinesPagination"></ul>
                         </div>
                     </div>
                 </div>
@@ -477,7 +493,7 @@ require_once '../config/config.php';
                     </button>
                     <h6 class="alert-heading"><i class="fas fa-info-circle"></i> วิธีการบันทึกประวัติ</h6>
                     <ul class="mb-0 pl-3">
-                        <li><strong>การซ่อม (Repair):</strong> ใช้ฟอร์มแจ้งซ่อมปกติ → ระบบจะบันทึกประวัติอัตโนมัติเมื่อซ่อมเสร็จ</li>
+                        <li><strong>การซ่อม (Repair):</strong> ใช้ฟอร์มแจ้งซ่อมปกติ</li>
                         <li><strong>PM / Calibration:</strong> กดปุ่ม <span class="badge badge-success">"เพิ่มประวัติ PM/Calibration"</span> เพื่อบันทึกตรงๆ</li>
                         <li><strong>ดูประวัติ:</strong> เลือกรหัสเครื่องจักรด้านล่าง → กด "แสดงประวัติ"</li>
                     </ul>
@@ -544,8 +560,6 @@ require_once '../config/config.php';
                                         <th style="width: 100px;">ค่าใช้จ่าย</th>
                                         <th style="width: 100px;">เวลาปฏิบัติงาน (ชั่วโมง)</th>
                                         <th style="width: 100px;">เวลาหยุดเครื่อง (ชั่วโมง)</th>
-                                        <!-- <th style="width: 120px;">เวลาเริ่มปฏิบัติงาน</th> -->
-                                        <!-- <th style="width: 120px;">เวลาปฏิบัติงานเสร็จ</th> -->
                                         <th style="width: 100px;">ผู้รับผิดชอบ</th>
                                         <th style="width: 120px;">จัดการ</th>
                                     </tr>
@@ -558,6 +572,11 @@ require_once '../config/config.php';
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-between align-items-center mt-2" id="historyPaginationWrap" style="display:none!important;">
+                            <span id="historyPaginationInfo" class="text-muted small"></span>
+                            <ul class="pagination pagination-sm mb-0" id="historyPagination"></ul>
                         </div>
                     </div>
                 </div>
@@ -1271,10 +1290,10 @@ require_once '../config/config.php';
     <script>
         // Load repairs data
         // Pagination state
-        var repairsCurrentPage = 1;
-        var repairsLimit = 100;
+        var repairsCurrentPage = 1; 
+        var repairsLimit = 30; // จำนวนรายการต่อหน้า
 
-        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '', page = 1, machineNumber = '') {
+        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '', page = 1, machineNumber = '', jobType = '') {
             repairsCurrentPage = page;
             $.ajax({
                 url: '../api/get_all_repairs.php',
@@ -1286,6 +1305,7 @@ require_once '../config/config.php';
                     status: status,
                     registry_signer: registrySigner,
                     machine_number: machineNumber,
+                    job_type: jobType,
                     page: page,
                     limit: repairsLimit
                 }),
@@ -1415,7 +1435,8 @@ require_once '../config/config.php';
             const status         = $('#filter_status').val();
             const registrySigner = $('#filter_registry_signer').val();
             const machineNumber  = $('#filter_machine_number').val();
-            loadRepairs(repairDate, documentNo, status, registrySigner, page, machineNumber);
+            const jobType        = $('#filter_job_type').val();
+            loadRepairs(repairDate, documentNo, status, registrySigner, page, machineNumber, jobType);
             // Scroll table into view
             $('html, body').animate({ scrollTop: $('#repairsTableBody').offset().top - 80 }, 200);
         }
@@ -1427,7 +1448,8 @@ require_once '../config/config.php';
             const status         = $('#filter_status').val();
             const registrySigner = $('#filter_registry_signer').val();
             const machineNumber  = $('#filter_machine_number').val();
-            loadRepairs(repairDate, documentNo, status, registrySigner, 1, machineNumber);
+            const jobType        = $('#filter_job_type').val();
+            loadRepairs(repairDate, documentNo, status, registrySigner, 1, machineNumber, jobType);
         }
 
         function clearFilters() {
@@ -1436,7 +1458,8 @@ require_once '../config/config.php';
             $('#filter_status').val('');
             $('#filter_registry_signer').val('');
             $('#filter_machine_number').val('');
-            loadRepairs('', '', '', '', 1, '');
+            $('#filter_job_type').val('');
+            loadRepairs('', '', '', '', 1, '', '');
         }
 
         // Print repair form

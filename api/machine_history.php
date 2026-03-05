@@ -53,9 +53,37 @@ function handleGet($conn) {
         return;
     }
     
-    // GET by machine_code
+    // GET by machine_code (รองรับ pagination เมื่อส่ง page)
     if (isset($_GET['machine_code'])) {
         $machine_code = $_GET['machine_code'];
+
+        if (isset($_GET['page'])) {
+            $page   = max(1, intval($_GET['page']));
+            $limit  = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 30;
+            $offset = ($page - 1) * $limit;
+
+            $cnt = $conn->prepare("SELECT COUNT(*) FROM mt_machine_history WHERE machine_code = :mc");
+            $cnt->bindParam(':mc', $machine_code);
+            $cnt->execute();
+            $total = (int)$cnt->fetchColumn();
+
+            $stmt = $conn->prepare("SELECT * FROM mt_machine_history WHERE machine_code = :mc ORDER BY work_date DESC, id DESC LIMIT :limit OFFSET :offset");
+            $stmt->bindParam(':mc', $machine_code);
+            $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            json_response(true, 'ดึงข้อมูลสำเร็จ', [
+                'rows'        => $rows,
+                'total'       => $total,
+                'total_pages' => (int)ceil($total / $limit),
+                'page'        => $page
+            ]);
+            return;
+        }
+
+        // ไม่มี page → คืนทั้งหมด (backward compat)
         $sql = "SELECT * FROM mt_machine_history WHERE machine_code = :machine_code ORDER BY work_date DESC, id DESC";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(':machine_code', $machine_code);

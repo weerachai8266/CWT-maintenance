@@ -12,45 +12,104 @@ function nl2br(text) {
     return text.replace(/\n/g, '<br>');
 }
 
-// ==================== โหลดประวัติเครื่องจักร ====================
-function loadMachineHistoryByCode(machineCode) {
-    console.log('Loading history for machine:', machineCode);
+// Pagination state สำหรับประวัติ
+var historyCurrentMachineCode = '';
+var historyCurrentPage = 1;
+var historyLimit = 30;
+
+// ==================== โหลดประวัติเครื่องจักร (server-side pagination) ====================
+function loadMachineHistoryByCode(machineCode, page) {
+    page = page || 1;
+    historyCurrentMachineCode = machineCode;
+    historyCurrentPage = page;
+
+    console.log('Loading history for machine:', machineCode, 'page:', page);
     $.ajax({
-        url: '../api/machine_history.php?machine_code=' + encodeURIComponent(machineCode),
+        url: '../api/machine_history.php',
         method: 'GET',
+        data: { machine_code: machineCode, page: page, limit: historyLimit },
         dataType: 'json',
         success: function(response) {
-            console.log('History response:', response);
-            if (response.success) {
-                displayMachineHistory(response.data);
+            if (response.success && response.data && response.data.rows !== undefined) {
+                var d = response.data;
+                displayMachineHistory(d.rows, page);
+                renderHistoryPagination(d.total, d.total_pages, d.page);
             } else {
-                console.warn('No history data:', response.message);
-                displayMachineHistory([]);
+                displayMachineHistory([], 1);
+                $('#historyPaginationWrap').hide();
             }
         },
         error: function(xhr, status, error) {
             console.error('Error loading machine history:', error);
-            console.error('Response:', xhr.responseText);
-            displayMachineHistory([]);
+            displayMachineHistory([], 1);
+            $('#historyPaginationWrap').hide();
         }
     });
 }
 
+function goHistoryPage(page) {
+    loadMachineHistoryByCode(historyCurrentMachineCode, page);
+    $('html, body').animate({ scrollTop: $('#repair_history_card').offset().top - 80 }, 200);
+}
+
+function renderHistoryPagination(total, totalPages, currentPage) {
+    var $wrap  = $('#historyPaginationWrap');
+    var $info  = $('#historyPaginationInfo');
+    var $pager = $('#historyPagination');
+
+    if (totalPages <= 1) {
+        $info.text('ทั้งหมด ' + total + ' รายการ');
+        $pager.html('');
+        $wrap.show();
+        return;
+    }
+
+    var start = (currentPage - 1) * historyLimit + 1;
+    var end   = Math.min(currentPage * historyLimit, total);
+    $info.text('แสดง ' + start + '-' + end + ' จาก ' + total + ' รายการ');
+
+    var pages = '';
+    pages += '<li class="page-item' + (currentPage === 1 ? ' disabled' : '') + '">' +
+             '<a class="page-link" href="#" onclick="goHistoryPage(' + (currentPage - 1) + ');return false;">&laquo;</a></li>';
+
+    var sp = Math.max(1, currentPage - 2);
+    var ep = Math.min(totalPages, currentPage + 2);
+    if (sp > 1) {
+        pages += '<li class="page-item"><a class="page-link" href="#" onclick="goHistoryPage(1);return false;">1</a></li>';
+        if (sp > 2) pages += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+    }
+    for (var p = sp; p <= ep; p++) {
+        pages += '<li class="page-item' + (p === currentPage ? ' active' : '') + '">' +
+                 '<a class="page-link" href="#" onclick="goHistoryPage(' + p + ');return false;">' + p + '</a></li>';
+    }
+    if (ep < totalPages) {
+        if (ep < totalPages - 1) pages += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+        pages += '<li class="page-item"><a class="page-link" href="#" onclick="goHistoryPage(' + totalPages + ');return false;">' + totalPages + '</a></li>';
+    }
+    pages += '<li class="page-item' + (currentPage === totalPages ? ' disabled' : '') + '">' +
+             '<a class="page-link" href="#" onclick="goHistoryPage(' + (currentPage + 1) + ');return false;">&raquo;</a></li>';
+
+    $pager.html(pages);
+    $wrap.show();
+}
+
 // ==================== แสดงประวัติในตาราง ====================
-function displayMachineHistory(historyData) {
+function displayMachineHistory(historyData, page) {
+    page = page || 1;
     const tbody = $('#repair_history_body');
     let html = '';
     
     if (!historyData || historyData.length === 0) {
         html = '<tr><td colspan="14" class="text-center">ไม่มีประวัติการซ่อม</td></tr>';
         tbody.html(html);
-        $('#repair_history_card').show(); // แสดงการ์ดแม้ไม่มีข้อมูล
+        $('#repair_history_card').show();
         return;
     }
     
     historyData.forEach(function(item, index) {
+        var rowNo = (page - 1) * historyLimit + index + 1;
         html += '<tr>';
-        html += '<td class="text-center">' + (index + 1) + '</td>';
+        html += '<td class="text-center">' + rowNo + '</td>';
         html += '<td class="text-center">' + formatDateDMY(item.work_date) + '</td>';
         html += '<td>' + (item.document_no || '-') + '</td>';
         html += '<td>' + nl2br(item.issue_description) + '</td>';
@@ -59,8 +118,6 @@ function displayMachineHistory(historyData) {
         html += '<td class="text-right">' + formatCurrency(item.total_cost) + '</td>';
         html += '<td class="text-center">' + (item.work_hours || '0') + '</td>';
         html += '<td class="text-center">' + (item.downtime_hours || '0') + '</td>';
-        // html += '<td class="text-center">' + formatDateDMY(item.start_date) + '</td>';
-        // html += '<td class="text-center">' + formatDateDMY(item.completed_date) + '</td>';
         html += '<td>' + (item.handled_by || '-') + '</td>';
         html += '<td class="text-center">';
         html += '<button class="btn btn-sm btn-primary" onclick="viewHistoryDetail(' + item.id + ')" title="ดู"><i class="fas fa-eye"></i></button> ';
@@ -71,7 +128,7 @@ function displayMachineHistory(historyData) {
     });
     
     tbody.html(html);
-    $('#repair_history_card').show(); // แสดงการ์ดหลังจากโหลดข้อมูลเสร็จ
+    $('#repair_history_card').show();
 }
 
 // ==================== เปิดโมดอลเพิ่มประวัติ ====================
@@ -376,8 +433,8 @@ function saveHistory(event) {
                 }
                 alert(message);
                 $('#historyModal').modal('hide');
-                // โหลดประวัติใหม่
-                loadMachineHistoryByCode(data.machine_code);
+                // โหลดประวัติใหม่ (เพิ่มใหม่ → ไปหน้า 1)
+                loadMachineHistoryByCode(historyCurrentMachineCode, id ? historyCurrentPage : 1);
                 // รีเฟรชรายการใบแจ้งซ่อม Tab 1
                 if (typeof loadRepairs === 'function') loadRepairs();
             } else {
@@ -404,11 +461,8 @@ function deleteHistory(id) {
         success: function(response) {
             if (response.success) {
                 alert('ลบข้อมูลสำเร็จ');
-                // โหลดประวัติใหม่
-                const machineCode = $('#history_machine_select_input').val();
-                if (machineCode) {
-                    loadMachineHistoryByCode(machineCode);
-                }
+                // โหลดประวัติใหม่ (คงหน้าเดิม)
+                loadMachineHistoryByCode(historyCurrentMachineCode, historyCurrentPage);
                 // รีเฟรชรายการใบแจ้งซ่อม Tab 1
                 if (typeof loadRepairs === 'function') loadRepairs();
             } else {
