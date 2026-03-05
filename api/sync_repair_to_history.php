@@ -68,6 +68,7 @@ function syncRepairToHistory($repairId, $conn) {
                 branch = :branch,
                 department = :department,
                 note = :note,
+                action_type = :action_type,
                 updated_at = CURRENT_TIMESTAMP
                 WHERE document_no = :document_no";
             
@@ -84,14 +85,14 @@ function syncRepairToHistory($repairId, $conn) {
                  issue_description, solution_description, parts_used,
                  work_hours, downtime_hours, total_cost,
                  reported_by, handled_by, status,
-                 branch, department, note)
+                 branch, department, note, action_type)
                 VALUES 
                 (:machine_id, :machine_code, :machine_name, :document_no,
                  :work_date, :start_date, :completed_date,
                  :issue_description, :solution_description, :parts_used,
                  :work_hours, :downtime_hours, :total_cost,
                  :reported_by, :handled_by, 'completed',
-                 :branch, :department, :note)";
+                 :branch, :department, :note, :action_type)";
             
             $stmt = $conn->prepare($insertSql);
             $stmt->bindValue(':machine_id',   $machineId,   PDO::PARAM_INT);
@@ -115,6 +116,7 @@ function syncRepairToHistory($repairId, $conn) {
         $stmt->bindValue(':handled_by', $repair['handled_by']);
         $stmt->bindValue(':branch', $repair['branch']);
         $stmt->bindValue(':department', $repair['department']);
+        $stmt->bindValue(':action_type', $repair['action_type'] ?? null);
         
         $stmt->execute();
         return true;

@@ -182,7 +182,7 @@ function handlePost($conn) {
         issue_description, solution_description, parts_used,
         work_hours, downtime_hours, labor_cost, parts_cost, other_cost, total_cost,
         reported_by, handled_by, approved_by,
-        status, priority, note, attachments,
+        status, priority, note, action_type,
         branch, department, created_by
     ) VALUES (
         :machine_id, :machine_code, :machine_name, :document_no,
@@ -190,7 +190,7 @@ function handlePost($conn) {
         :issue_description, :solution_description, :parts_used,
         :work_hours, :downtime_hours, :labor_cost, :parts_cost, :other_cost, :total_cost,
         :reported_by, :handled_by, :approved_by,
-        :status, :priority, :note, :attachments,
+        :status, :priority, :note, :action_type,
         :branch, :department, :created_by
     )";
     
@@ -219,7 +219,7 @@ function handlePost($conn) {
     $stmt->bindValue(':status', $input['status'] ?? 'completed');
     $stmt->bindValue(':priority', $input['priority'] ?? null);
     $stmt->bindValue(':note', $input['note'] ?? null);
-    $stmt->bindValue(':attachments', $input['attachments'] ?? null);
+    $stmt->bindValue(':action_type', $input['action_type'] ?? null);
     $stmt->bindValue(':branch', $input['branch'] ?? null);
     $stmt->bindValue(':department', $input['department'] ?? null);
     $stmt->bindValue(':created_by', $input['created_by'] ?? null);
@@ -266,7 +266,7 @@ function handlePut($conn) {
         status = :status,
         priority = :priority,
         note = :note,
-        attachments = :attachments,
+        action_type = :action_type,
         branch = :branch,
         department = :department
         WHERE id = :id";
@@ -296,7 +296,7 @@ function handlePut($conn) {
     $stmt->bindValue(':status', $input['status'] ?? 'completed');
     $stmt->bindValue(':priority', $input['priority'] ?? null);
     $stmt->bindValue(':note', $input['note'] ?? null);
-    $stmt->bindValue(':attachments', $input['attachments'] ?? null);
+    $stmt->bindValue(':action_type', $input['action_type'] ?? null);
     $stmt->bindValue(':branch', $input['branch'] ?? null);
     $stmt->bindValue(':department', $input['department'] ?? null);
     
