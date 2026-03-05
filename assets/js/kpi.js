@@ -94,7 +94,7 @@ function loadKPIData() {
                 updateKPICards(response.data);
                 updateCharts(response.data);
                 updateTables(response.data);
-                checkThresholdAlerts(response.data);
+                // checkThresholdAlerts(response.data);
             } else {
                 alert('เกิดข้อผิดพลาด: ' + response.message);
             }
@@ -565,6 +565,7 @@ function updateTables(data) {
     updateFrequentMachinesTable(data.frequent_machines);
     updateTechnicianTable(data.technician_stats);
     updateExpensiveMachinesTable(data.expensive_machines);
+    updateDowntimeMachinesTable(data.downtime_machines);
     updateBranchTable(data.branch_stats);
 }
 
@@ -574,7 +575,7 @@ function updateFrequentMachinesTable(machines) {
     tbody.empty();
     
     if (machines.length === 0) {
-        tbody.append('<tr><td colspan="4" class="text-center text-muted">ไม่มีข้อมูล</td></tr>');
+        tbody.append('<tr><td colspan="5" class="text-center text-muted">ไม่มีข้อมูล</td></tr>');
         return;
     }
     
@@ -583,6 +584,7 @@ function updateFrequentMachinesTable(machines) {
             <tr>
                 <td>${index + 1}</td>
                 <td><strong>${machine.machine_number || '-'}</strong></td>
+                <td class="machine-name-cell" title="${machine.machine_name || '-'}">${machine.machine_name || '-'}</td>
                 <td class="text-center"><span class="badge badge-warning">${machine.repair_count}</span></td>
                 <td class="text-center"><span class="badge badge-success">${machine.completed_count}</span></td>
             </tr>
@@ -635,10 +637,38 @@ function updateExpensiveMachinesTable(machines) {
             <tr>
                 <td>${index + 1}</td>
                 <td><strong>${machine.machine_code || '-'}</strong></td>
-                <td>${machine.machine_name || '-'}</td>
+                <td class="machine-name-cell" title="${machine.machine_name || '-'}">${machine.machine_name || '-'}</td>
                 <td class="text-center"><span class="badge badge-info">${machine.repair_count}</span></td>
                 <td class="text-right"><strong class="text-danger">${totalCost.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td>
                 <td class="text-right">${avgCost.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ตารางเครื่องจักรที่มี Downtime มากที่สุด
+function updateDowntimeMachinesTable(machines) {
+    const tbody = $('#downtimeMachinesTable tbody');
+    tbody.empty();
+    
+    if (!machines || machines.length === 0) {
+        tbody.append('<tr><td colspan="6" class="text-center text-muted">ไม่มีข้อมูล</td></tr>');
+        return;
+    }
+    
+    machines.forEach((machine, index) => {
+        const totalDowntime = parseFloat(machine.total_downtime_hours) || 0;
+        const avgDowntime = parseFloat(machine.avg_downtime_hours) || 0;
+        
+        const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${machine.machine_code || '-'}</strong></td>
+                <td class="machine-name-cell" title="${machine.machine_name || '-'}">${machine.machine_name || '-'}</td>
+                <td class="text-center"><span class="badge badge-info">${machine.repair_count}</span></td>
+                <td class="text-center"><strong style="color:#6f42c1">${totalDowntime.toFixed(1)} ชม.</strong></td>
+                <td class="text-center">${avgDowntime.toFixed(1)} ชม.</td>
             </tr>
         `;
         tbody.append(row);
@@ -1322,7 +1352,7 @@ function showStatusDetails(status, statusLabel) {
 }
 
 // Show machine details when clicking on table rows
-$(document).on('click', '#frequentMachinesTable tbody tr, #mtbfTable tbody tr', function() {
+$(document).on('click', '#frequentMachinesTable tbody tr, #mtbfTable tbody tr, #downtimeMachinesTable tbody tr, #expensiveMachinesTable tbody tr', function() {
     const machineNumber = $(this).find('td:eq(1) strong').text().trim();
     if (machineNumber && machineNumber !== '-') {
         showMachineHistory(machineNumber);
@@ -1568,8 +1598,9 @@ function saveThresholds() {
     $('#thresholdSettingsModal').modal('hide');
     
     // Re-check alerts with new thresholds
+    // การแจ้งเตือนจะถูกตรวจสอบทุกครั้งที่โหลดข้อมูลใหม่ ดังนั้นเราจึงไม่จำเป็นต้องเรียกฟังก์ชันตรวจสอบที่นี่โดยตรง แต่ถ้าต้องการให้ตรวจสอบทันทีหลังบันทึก สามารถเรียกได้ดังนี้:
     if (currentKPIData) {
-        checkThresholdAlerts(currentKPIData);
+        // checkThresholdAlerts(currentKPIData);
     }
 }
 

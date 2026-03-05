@@ -252,6 +252,14 @@ require_once '../config/config.php';
             color: white;
         }
         
+        /* Truncate long machine names */
+        .machine-name-cell {
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
         /* Print styles */
         @media print {
             .btn, .filter-section, .dashboard-header .btn-back {
@@ -296,13 +304,17 @@ require_once '../config/config.php';
         
         /* Table hover effect with cursor pointer */
         #frequentMachinesTable tbody tr,
-        #mtbfTable tbody tr {
+        #mtbfTable tbody tr,
+        #downtimeMachinesTable tbody tr,
+        #expensiveMachinesTable tbody tr {
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
         #frequentMachinesTable tbody tr:hover,
-        #mtbfTable tbody tr:hover {
+        #mtbfTable tbody tr:hover,
+        #downtimeMachinesTable tbody tr:hover,
+        #expensiveMachinesTable tbody tr:hover {
             background-color: #e3f2fd !important;
             transform: scale(1.01);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -845,6 +857,26 @@ require_once '../config/config.php';
                 </div>
             </div>
         </div>
+
+        <!-- Monthly Performance & Pareto Chart Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-area" style="color: #007bff;"></i> ประสิทธิภาพรายเดือน (12 เดือนล่าสุด)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="monthlyPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-bar" style="color: #dc3545;"></i> Pareto Chart - สาเหตุหลักของการเสีย</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="paretoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Tables Row -->
         <div class="row">
@@ -858,6 +890,7 @@ require_once '../config/config.php';
                                 <tr>
                                     <th>#</th>
                                     <th>รหัสเครื่องจักร</th>
+                                    <th>ชื่อเครื่องจักร</th>
                                     <th class="text-center">จำนวนครั้ง</th>
                                     <th class="text-center">เสร็จสิ้น</th>
                                 </tr>
@@ -871,15 +904,17 @@ require_once '../config/config.php';
             </div>
             <div class="col-md-6">
                 <div class="table-container">
-                    <h3><i class="fas fa-user-tie" style="color: #007bff;"></i> ช่างที่ทำงานมากที่สุด (Top 10)</h3>
+                    <h3><i class="fas fa-exclamation-circle" style="color: #6f42c1;"></i> เครื่องจักรที่มี Downtime มากที่สุด (Top 10)</h3>
                     <div class="table-responsive">
-                        <table class="table table-hover" id="technicianTable">
+                        <table class="table table-hover" id="downtimeMachinesTable">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>ชื่อช่าง</th>
-                                    <th class="text-center">จำนวนงาน</th>
-                                    <th class="text-center">ชั่วโมงรวม</th>
+                                    <th>รหัสเครื่องจักร</th>
+                                    <th>ชื่อเครื่องจักร</th>
+                                    <th class="text-center">จำนวนครั้ง</th>
+                                    <th class="text-center">Downtime รวม (ชม.)</th>
+                                    <th class="text-center">เฉลี่ย/ครั้ง (ชม.)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -915,6 +950,31 @@ require_once '../config/config.php';
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-6">
+                <div class="table-container">
+                    <h3><i class="fas fa-user-tie" style="color: #007bff;"></i> ช่างที่ทำงานมากที่สุด (Top 10)</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="technicianTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ชื่อช่าง</th>
+                                    <th class="text-center">จำนวนงาน</th>
+                                    <th class="text-center">ชั่วโมงรวม</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>                
+            </div>
+        </div>
+        
+        <!-- Branch Stats Row -->
+        <!-- <div class="row">
             <div class="col-md-6">
                 <div class="table-container">
                     <h3><i class="fas fa-building" style="color: #28a745;"></i> สถิติตามสาขา</h3>
@@ -929,14 +989,14 @@ require_once '../config/config.php';
                                     <th class="text-center">% สำเร็จ</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody> -->
                                 <!-- Data will be populated by JavaScript -->
-                            </tbody>
+                            <!-- </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
         
         <!-- Advanced Analytics Section -->
         <!-- MTBF Card -->
@@ -968,28 +1028,8 @@ require_once '../config/config.php';
                     </div>
                 </div>
             </div>
-        </div> -->
-        
-        <!-- Monthly Performance & Pareto Chart Row -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="chart-container">
-                    <h3><i class="fas fa-chart-area" style="color: #007bff;"></i> ประสิทธิภาพรายเดือน (12 เดือนล่าสุด)</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="monthlyPerformanceChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="chart-container">
-                    <h3><i class="fas fa-chart-bar" style="color: #dc3545;"></i> Pareto Chart - สาเหตุหลักของการเสีย</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="paretoChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
+        </div> -->      
+
         <!-- MTBF by Machine Table -->
         <div class="row">
             <div class="col-md-12">

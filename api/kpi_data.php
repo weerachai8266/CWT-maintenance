@@ -91,13 +91,15 @@ try {
     
     // ===== 3. เครื่องจักรที่มีปัญหาบ่อย (Top 10) =====
     $sql_frequent = "SELECT 
-        machine_number,
+        r.machine_number,
+        m.machine_name,
         COUNT(*) as repair_count,
-        COUNT(CASE WHEN status = 40 THEN 1 END) as completed_count
-        FROM mt_repair
+        COUNT(CASE WHEN r.status = 40 THEN 1 END) as completed_count
+        FROM mt_repair r
+        LEFT JOIN mt_machines m ON m.machine_code COLLATE utf8mb4_0900_ai_ci = r.machine_number
         WHERE $where_clause
-        AND action_type = 'repair'
-        GROUP BY machine_number
+        AND r.action_type = 'repair'
+        GROUP BY r.machine_number, m.machine_name
         ORDER BY repair_count DESC
         LIMIT 10";
     
@@ -163,7 +165,8 @@ try {
         SUM(work_hours) as total_work_hours,
         SUM(downtime_hours) as total_downtime_hours
         FROM mt_machine_history
-        WHERE DATE(work_date) BETWEEN :date_from AND :date_to";
+        WHERE DATE(work_date) BETWEEN :date_from AND :date_to
+        AND action_type = 'repair'";
     
     $stmt = $conn->prepare($sql_cost);
     $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
@@ -214,6 +217,7 @@ try {
         MAX(work_hours) as max_hours
         FROM mt_machine_history
         WHERE DATE(start_date) BETWEEN :date_from AND :date_to
+        AND action_type = 'repair'
         AND work_hours IS NOT NULL
         GROUP BY status";
     
@@ -232,6 +236,7 @@ try {
         FROM mt_machine_history
         WHERE DATE(start_date) BETWEEN :date_from AND :date_to
         AND downtime_hours IS NOT NULL
+        AND action_type = 'repair'
         GROUP BY status";
     
     $stmt = $conn->prepare($sql_downtime_hours);
@@ -371,6 +376,25 @@ try {
         'oee' => null // Would need more complex calculation
     ];
     
+    // ===== 16. เครื่องจักรที่มี Downtime มากที่สุด (Top 10) =====
+    $sql_downtime_machines = "SELECT 
+        machine_code,
+        machine_name,
+        COUNT(*) as repair_count,
+        SUM(downtime_hours) as total_downtime_hours,
+        AVG(downtime_hours) as avg_downtime_hours
+        FROM mt_machine_history
+        WHERE DATE(work_date) BETWEEN :date_from AND :date_to
+        AND action_type = 'repair'
+        AND downtime_hours > 0
+        GROUP BY machine_code, machine_name
+        ORDER BY total_downtime_hours DESC
+        LIMIT 10";
+    
+    $stmt = $conn->prepare($sql_downtime_machines);
+    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $downtime_machines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
     // Response
     $response = [
         'success' => true,
@@ -395,7 +419,8 @@ try {
             'monthly_performance' => $monthly_performance,
             'failure_causes' => $failure_causes,
             'mtbf_data' => $mtbf_data,
-            'overall_mtbf' => $overall_mtbf
+            'overall_mtbf' => $overall_mtbf,
+            'downtime_machines' => $downtime_machines
         ]
     ];
     
