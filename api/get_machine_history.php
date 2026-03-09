@@ -24,6 +24,7 @@ try {
         status,
         handled_by,
         work_hours,
+        downtime_hours,
         total_cost,
         TIMESTAMPDIFF(HOUR, start_job, COALESCE(end_job, NOW())) as calc_hours
         FROM mt_repair

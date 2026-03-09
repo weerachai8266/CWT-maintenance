@@ -166,11 +166,17 @@ try {
         <!-- <a href="../index.php" class="print-btn" style="display: inline-block; margin-right: 10px; background: #6c757d; text-decoration: none;">
             <i class="fas fa-home"></i> หน้าแรก
         </a> -->
-        <?php $is_locked = in_array($record_status, [11, 50]); ?>
-        <button class="print-btn" id="save-repair-btn" style="background: #007bff;<?php echo $is_locked ? ' opacity:0.45; cursor:not-allowed;' : ''; ?>" <?php echo $is_locked ? 'disabled title="ไม่สามารถแก้ไขได้ (สถานะ ' . ($record_status === 11 ? 'ไม่อนุมัติ' : 'ยกเลิก') . ')"' : ''; ?>>
+        <?php
+        $is_locked = in_array($record_status, [11, 50]);
+        $from_repair = (isset($_GET['from']) && $_GET['from'] === 'repair');
+        $save_disabled = $is_locked || $from_repair;
+        $save_style_extra = $save_disabled ? ' opacity:0.45; cursor:not-allowed;' : '';
+        $save_attr = $save_disabled ? 'disabled title="' . ($is_locked ? 'ไม่สามารถแก้ไขได้ (สถานะ ' . ($record_status === 11 ? 'ไม่อนุมัติ' : 'ยกเลิก') . ')' : 'ไม่สามารถบันทึกจากหน้าแจ้งซ่อม') . '"' : '';
+    ?>
+        <button class="print-btn" id="save-repair-btn" style="background: #007bff;<?php echo $save_style_extra; ?>" <?php echo $save_attr; ?>>
             <i class="fas fa-save"></i> บันทึกข้อมูล
         </button>
-        <button class="print-btn" id="save-btn" style="background: #28a745;<?php echo $is_locked ? ' opacity:0.45; cursor:not-allowed;' : ''; ?>" <?php echo $is_locked ? 'disabled title="ไม่สามารถแก้ไขได้ (สถานะ ' . ($record_status === 11 ? 'ไม่อนุมัติ' : 'ยกเลิก') . ')"' : ''; ?>>
+        <button class="print-btn" id="save-btn" style="background: #28a745;<?php echo $save_style_extra; ?>" <?php echo $save_attr; ?>>
             <i class="fas fa-save"></i> บันทึกลงประวัติ
         </button>
         <button class="print-btn" onclick="window.print()">

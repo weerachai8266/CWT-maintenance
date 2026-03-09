@@ -157,7 +157,7 @@ try {
     $stmt->execute([':date_to' => $date_to]);
     $daily_trend = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // ===== 7. ข้อมูลค่าใช้จ่ายจาก machine_history =====
+    // ===== 7. ข้อมูลค่าใช้จ่ายจาก mt_repair =====
     $sql_cost = "SELECT 
         COUNT(*) as total_history,
         SUM(total_cost) as total_cost,
@@ -178,33 +178,34 @@ try {
         COUNT(*) as job_count,
         SUM(work_hours) as total_hours,
         AVG(work_hours) as avg_hours
-        FROM mt_machine_history
-        WHERE DATE(work_date) BETWEEN :date_from AND :date_to
+        FROM mt_repair
+        WHERE $where_clause
         AND handled_by IS NOT NULL AND handled_by != ''
         GROUP BY handled_by
         ORDER BY job_count DESC
         LIMIT 10";
     
     $stmt = $conn->prepare($sql_technician);
-    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $stmt->execute($params);
     $technician_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // ===== 9. เครื่องจักรที่มีค่าใช้จ่ายสูงสุด =====
     $sql_expensive_machines = "SELECT 
-        machine_code,
-        machine_name,
+        r.machine_number as machine_code,
+        m.machine_name,
         COUNT(*) as repair_count,
-        SUM(total_cost) as total_cost,
-        AVG(total_cost) as avg_cost
-        FROM mt_machine_history
-        WHERE DATE(work_date) BETWEEN :date_from AND :date_to
-        AND total_cost > 0
-        GROUP BY machine_code, machine_name
+        SUM(r.total_cost) as total_cost,
+        AVG(r.total_cost) as avg_cost
+        FROM mt_repair r
+        LEFT JOIN mt_machines m ON m.machine_code COLLATE utf8mb4_0900_ai_ci = r.machine_number
+        WHERE $where_clause
+        AND r.total_cost > 0
+        GROUP BY r.machine_number, m.machine_name
         ORDER BY total_cost DESC
         LIMIT 10";
     
     $stmt = $conn->prepare($sql_expensive_machines);
-    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $stmt->execute($params);
     $expensive_machines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // ===== 9. สถิติเวลาทำงาน (work_hours) ตามสถานะ =====
@@ -215,7 +216,7 @@ try {
         SUM(work_hours) as total_hours,
         MIN(work_hours) as min_hours,
         MAX(work_hours) as max_hours
-        FROM mt_machine_history
+        FROM mt_repair
         WHERE DATE(start_date) BETWEEN :date_from AND :date_to
         AND action_type = 'repair'
         AND work_hours IS NOT NULL
@@ -233,7 +234,7 @@ try {
         SUM(downtime_hours) as total_hours,
         MIN(downtime_hours) as min_hours,
         MAX(downtime_hours) as max_hours
-        FROM mt_machine_history
+        FROM mt_repair
         WHERE DATE(start_date) BETWEEN :date_from AND :date_to
         AND downtime_hours IS NOT NULL
         AND action_type = 'repair'
@@ -349,8 +350,8 @@ try {
         -- [สูตรเก่า] AVG(work_hours) as avg_repair_hours,
         AVG(CASE WHEN action_type = 'repair' THEN work_hours END) as avg_repair_hours,
         AVG(TIMESTAMPDIFF(MINUTE, start_job, approved_at)) as avg_approval_minutes,
-        (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as success_rate,
-        (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as first_time_fix_rate
+        (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN status != 10 THEN 1 END), 0)) as success_rate,
+        (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN status != 10 THEN 1 END), 0)) as first_time_fix_rate
         FROM mt_repair
         WHERE DATE(start_job) BETWEEN :prev_date_from AND :prev_date_to
         AND status != 50
@@ -363,9 +364,10 @@ try {
     ]);
     $prev_summary = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Calculate current period metrics for comparison
-    $current_success_rate = $summary['total_repairs'] > 0 ? 
-        ($summary['completed_count'] / $summary['total_repairs'] * 100) : 0;
+    // Calculate current period metrics for comparison (exclude pending status=10 from denominator)
+    $base_for_success_rate = $summary['total_repairs'] - ($summary['pending_count'] ?? 0);
+    $current_success_rate = $base_for_success_rate > 0 ? 
+        ($summary['completed_count'] / $base_for_success_rate * 100) : 0;
     
     $comparison = [
         'total_repairs' => $prev_summary['total_repairs'],
@@ -378,21 +380,21 @@ try {
     
     // ===== 16. เครื่องจักรที่มี Downtime มากที่สุด (Top 10) =====
     $sql_downtime_machines = "SELECT 
-        machine_code,
-        machine_name,
+        r.machine_number as machine_code,
+        m.machine_name,
         COUNT(*) as repair_count,
-        SUM(downtime_hours) as total_downtime_hours,
-        AVG(downtime_hours) as avg_downtime_hours
-        FROM mt_machine_history
-        WHERE DATE(work_date) BETWEEN :date_from AND :date_to
-        AND action_type = 'repair'
-        AND downtime_hours > 0
-        GROUP BY machine_code, machine_name
+        SUM(r.downtime_hours) as total_downtime_hours,
+        AVG(r.downtime_hours) as avg_downtime_hours
+        FROM mt_repair r
+        LEFT JOIN mt_machines m ON m.machine_code COLLATE utf8mb4_0900_ai_ci = r.machine_number
+        WHERE $where_clause
+        AND r.downtime_hours > 0
+        GROUP BY r.machine_number, m.machine_name
         ORDER BY total_downtime_hours DESC
         LIMIT 10";
     
     $stmt = $conn->prepare($sql_downtime_machines);
-    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $stmt->execute($params);
     $downtime_machines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Response

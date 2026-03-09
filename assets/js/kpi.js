@@ -120,7 +120,9 @@ function updateKPICards(data) {
     
     const totalRepairs = parseInt(summary.total_repairs) || 0;
     const completedRepairs = parseInt(summary.completed_count) || 0;
-    const successRate = totalRepairs > 0 ? ((completedRepairs / totalRepairs) * 100).toFixed(1) : 0;
+    const pendingRepairs = parseInt(summary.pending_count) || 0;
+    const baseForSuccessRate = totalRepairs - pendingRepairs;
+    const successRate = baseForSuccessRate > 0 ? ((completedRepairs / baseForSuccessRate) * 100).toFixed(1) : 0;
     $('#keySuccessRate').text(successRate);
     
     const mtbfDays = parseFloat(data.overall_mtbf?.mtbf_days) || 0;
@@ -1399,7 +1401,7 @@ function showMachineHistory(machineNumber) {
             if (response.success && response.data) {
                 const rows = response.data;
                 const totalCost = rows.reduce((s, r) => s + (parseFloat(r.total_cost) || 0), 0);
-                const totalHours = rows.reduce((s, r) => s + (parseFloat(r.work_hours) || parseFloat(r.calc_hours) || 0), 0);
+                const totalHours = rows.reduce((s, r) => s + (parseFloat(r.downtime_hours) || 0), 0);
                 let html = `
                     <div class="row mb-3">
                         <div class="col-md-3">
@@ -1461,7 +1463,7 @@ function showMachineHistory(machineNumber) {
                         const statusMap = { '10': ['secondary','รออนุมัติ'], '11': ['danger','ไม่อนุมัติ'], '20': ['warning','ดำเนินการ'], '30': ['info','รออะไหล่'], '40': ['success','เสร็จสิ้น'], '50': ['dark','ยกเลิก'] };
                         const [statusBadge, statusText] = statusMap[String(item.status)] || ['secondary', item.status];
                         const docNo = item.document_no ? `<a href="../pages/print_form.php?id=${item.id}" target="_blank">${item.document_no}</a>` : '-';
-                        const hours = item.work_hours ? parseFloat(item.work_hours).toFixed(1) : (item.calc_hours ? parseFloat(item.calc_hours).toFixed(1) : '-');
+                        const hours = item.downtime_hours ? parseFloat(item.downtime_hours).toFixed(1) : '-';
                         const cost = item.total_cost ? parseFloat(item.total_cost).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
                         html += `
                             <tr>

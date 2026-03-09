@@ -176,7 +176,7 @@ try {
             
             // คอลัมน์พิมพ์ (ท้ายสุด)
             echo "<td class='text-center'>";
-            echo "<a href='print_form.php?id=" . $row["id"] . "' target='_blank' class='btn btn-sm btn-info' title='พิมพ์ใบแจ้งซ่อม'>";
+            echo "<a href='print_form.php?id=" . $row["id"] . "&from=repair' target='_blank' class='btn btn-sm btn-info' title='พิมพ์ใบแจ้งซ่อม'>"; 
             echo "<i class='fas fa-print'></i></a>";
             echo "</td>";
             
