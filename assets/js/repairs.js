@@ -66,6 +66,13 @@ function loadRepairs(repairDate, documentNo, status, registrySigner, page, machi
                     var actionTypeMap  = { check: 'ตรวจสอบ', fix: 'แก้ไขปัญหา', repair: 'ซ่อม', adjust: 'ปรับตั้ง', other: 'อื่นๆ' };
                     var actionTypeText = actionTypeMap[repair.action_type] || (repair.action_type || '-');
 
+                    var hasHistory = repair.registry_signer && repair.registry_signer.trim() !== '';
+                    // var rowClass = hasHistory ? 'table-success' : 'table-warning';
+                    var registryCell = hasHistory
+                        ? '<span class="badge badge-success"><i class="fas fa-check-circle"></i> ' + repair.registry_signer + '</span>'
+                        : '<span class="badge badge-danger"><i class="fas fa-exclamation-circle"></i> ยังไม่ลง</span>';
+
+                    // html += '<tr class="' + rowClass + '">';
                     html += '<tr>';
                     html += '<td><strong style="color: #007bff;">' + (repair.document_no || '-') + '</strong></td>';
                     html += '<td>' + formatDateDMY(repair.start_job) + '</td>';
@@ -75,7 +82,7 @@ function loadRepairs(repairDate, documentNo, status, registrySigner, page, machi
                     html += '<td>' + actionTypeText + '</td>';
                     html += '<td>' + statusBadge + '</td>';
                     html += '<td>' + (repair.handled_by      || '-') + '</td>';
-                    html += '<td>' + (repair.registry_signer || '-') + '</td>';
+                    html += '<td>' + registryCell + '</td>';
                     html += '<td class="text-center">';
                     html += '<a href="print_form.php?id=' + repair.id + '" class="btn btn-sm btn-primary" target="_blank" title="ดูรายละเอียด"><i class="fas fa-eye"></i></a> ';
                     html += '<button class="btn btn-sm btn-success" onclick="printRepair(' + repair.id + ')" title="พิมพ์ใบแจ้งซ่อม"><i class="fas fa-print"></i></button>';
