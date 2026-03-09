@@ -719,10 +719,8 @@ try {
 
         // ฟังก์ชัน send ข้อมูลไปยัง API
         function sendSaveRequest(btn, skipSync) {
-            // ตรวจสอบความครบถ้วนของ Section 3 ก่อนบันทึก (ทั้ง 2 ปุ่ม)
-            if (!validateSection3()) return;
-            // เพื่อให้ตรวจสอบเฉพาะปุ่ม "บันทึกลงประวัติ" เท่านั้น
-            // if (!skipSync && !validateSection3()) return;
+            // ตรวจสอบ Section 3 เฉพาะปุ่ม "บันทึกลงประวัติ" เท่านั้น
+            if (!skipSync && !validateSection3()) return;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
             const formData = collectFormData();
