@@ -50,6 +50,9 @@ package-lock.json
 vendor/
 composer.lock
 
+# Frontend Vendor Libraries (ใช้ install_vendor.sh แทน)
+assets/vendor/
+
 # OS Generated Files
 .DS_Store
 .DS_Store?

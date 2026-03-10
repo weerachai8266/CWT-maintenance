@@ -277,7 +277,7 @@ try {
         AND issue IS NOT NULL AND issue != ''
         GROUP BY issue
         ORDER BY count DESC
-        LIMIT 20";
+        LIMIT 10";
     
     $stmt = $conn->prepare($sql_failure_causes);
     $stmt->execute($params);
