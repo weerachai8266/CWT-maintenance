@@ -18,6 +18,11 @@ $machine_number = strtoupper(sanitize_input($_POST['machine_number'] ?? ''));
 $issue = sanitize_input($_POST['issue'] ?? '');
 $reported_by = sanitize_input($_POST['reported_by'] ?? '');
 
+// Device info (ส่งมาจาก client)
+$device_type = sanitize_input($_POST['device_type'] ?? '');
+$browser     = sanitize_input($_POST['browser'] ?? '');
+$os_name     = sanitize_input($_POST['os'] ?? '');
+
 // โปรดดำเนินการ (radio button)
 $action_type = sanitize_input($_POST['action_type'] ?? 'repair');
 $action_other_text = ($action_type === 'other') ? sanitize_input($_POST['action_other_text'] ?? '') : '';
@@ -170,6 +175,24 @@ try {
         }
     }
     
+    // บันทึก device log (ผู้แจ้ง)
+    try {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $dlSql = "INSERT INTO mt_device_log (repair_id, role, user_name, device_type, browser, os, ip_address)
+                  VALUES (:repair_id, 'reporter', :user_name, :device_type, :browser, :os, :ip)";
+        $dlStmt = $conn->prepare($dlSql);
+        $dlStmt->execute([
+            ':repair_id'   => $last_id,
+            ':user_name'   => $reported_by,
+            ':device_type' => $device_type,
+            ':browser'     => $browser,
+            ':os'          => $os_name,
+            ':ip'          => $ip,
+        ]);
+    } catch (Exception $e) {
+        error_log("Device log error (reporter): " . $e->getMessage());
+    }
+
     json_response(true, 'บันทึกข้อมูลเรียบร้อย เลขที่: ' . $document_no, ['id' => $last_id, 'document_no' => $document_no]);
 } catch (PDOException $e) {
     http_response_code(500);

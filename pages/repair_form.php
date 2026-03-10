@@ -309,6 +309,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
 <!-- Custom JS -->
+<script src="../assets/js/helpers.js"></script>
 <script src="../assets/js/repair_form.js"></script>
 <script src="../assets/js/master_data.js"></script>
 

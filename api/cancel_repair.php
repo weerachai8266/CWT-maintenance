@@ -19,7 +19,12 @@ if (!isset($data['id']) || empty($data['id'])) {
 
 $id = intval($data['id']);
 $cancel_reason = isset($data['reason']) ? trim($data['reason']) : '';
-$cancelled_by = isset($data['cancelled_by']) ? trim($data['cancelled_by']) : '';
+$cancelled_by  = isset($data['cancelled_by']) ? trim($data['cancelled_by']) : '';
+
+// Device info (ส่งมาจาก client)
+$device_type = isset($data['device_type']) ? trim($data['device_type']) : '';
+$browser     = isset($data['browser'])     ? trim($data['browser'])     : '';
+$os_name     = isset($data['os'])          ? trim($data['os'])          : '';
 
 // ตรวจสอบว่ามีชื่อผู้ยกเลิก
 if (empty($cancelled_by)) {
@@ -66,6 +71,23 @@ try {
     $updateStmt->execute();
     
     if ($updateStmt->rowCount() > 0) {
+        // บันทึก device log (ผู้ยกเลิก)
+        try {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $dlSql = "INSERT INTO mt_device_log (repair_id, role, user_name, device_type, browser, os, ip_address)
+                      VALUES (:repair_id, 'canceller', :user_name, :device_type, :browser, :os, :ip)";
+            $dlStmt = $conn->prepare($dlSql);
+            $dlStmt->execute([
+                ':repair_id'   => $id,
+                ':user_name'   => $cancelled_by,
+                ':device_type' => $device_type,
+                ':browser'     => $browser,
+                ':os'          => $os_name,
+                ':ip'          => $ip,
+            ]);
+        } catch (Exception $e) {
+            error_log("Device log error (canceller): " . $e->getMessage());
+        }
         json_response(true, 'ยกเลิกใบแจ้งซ่อม ' . $repair['document_no'] . ' เรียบร้อยแล้ว');
     } else {
         json_response(false, 'ไม่สามารถยกเลิกใบแจ้งซ่อมได้');

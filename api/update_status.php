@@ -20,6 +20,11 @@ $job_status = sanitize_input($_POST['job_status'] ?? 'complete');
 $job_other_text = ($job_status === 'other') ? sanitize_input($_POST['job_other_text'] ?? '') : '';
 $receiver_name = sanitize_input($_POST['receiver_name'] ?? '');
 
+// Device info (ส่งมาจาก client)
+$device_type = sanitize_input($_POST['device_type'] ?? '');
+$browser     = sanitize_input($_POST['browser'] ?? '');
+$os_name     = sanitize_input($_POST['os'] ?? '');
+
 // Debug logging
 error_log("DEBUG update_status.php - POST data: " . print_r($_POST, true));
 error_log("DEBUG - id: $id, status: $status, handled_by: '$handled_by'");
@@ -113,7 +118,27 @@ try {
     }
     
     $stmt->execute();
-    
+
+    // บันทึก device log เมื่อเสร็จสิ้น (ผู้รับงาน)
+    if ($status == STATUS_COMPLETED) {
+        try {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $dlSql = "INSERT INTO mt_device_log (repair_id, role, user_name, device_type, browser, os, ip_address)
+                      VALUES (:repair_id, 'handler', :user_name, :device_type, :browser, :os, :ip)";
+            $dlStmt = $conn->prepare($dlSql);
+            $dlStmt->execute([
+                ':repair_id'   => $id,
+                ':user_name'   => $handled_by,
+                ':device_type' => $device_type,
+                ':browser'     => $browser,
+                ':os'          => $os_name,
+                ':ip'          => $ip,
+            ]);
+        } catch (Exception $e) {
+            error_log("Device log error (handler): " . $e->getMessage());
+        }
+    }
+
     // 🔥 Auto-sync to machine history when completed (status = 40)
     // if ($status == STATUS_COMPLETED) {
     //     $syncResult = syncRepairToHistory($id, $conn);

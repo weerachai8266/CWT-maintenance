@@ -1,6 +1,7 @@
 /**
  * ระบบแจ้งซ่อมเครื่องจักร - Main JavaScript
  * Version: 2.0
+ * หมายเหตุ: getDeviceInfo() อยู่ใน helpers.js
  */
 
 $(document).ready(function() {
@@ -187,6 +188,10 @@ $(document).ready(function() {
         
         // Create FormData for file upload
         const formData = new FormData(this);
+        const deviceInfo = getDeviceInfo();
+        formData.append('device_type', deviceInfo.device_type);
+        formData.append('browser', deviceInfo.browser);
+        formData.append('os', deviceInfo.os);
         
         $.ajax({
             url: '../api/save_repair.php',
@@ -336,7 +341,11 @@ $(document).ready(function() {
         
         const formData = new FormData(this);
         formData.append('status', '40'); // เสร็จสิ้น (STATUS_COMPLETED)
-        
+        const deviceInfo = getDeviceInfo();
+        formData.append('device_type', deviceInfo.device_type);
+        formData.append('browser', deviceInfo.browser);
+        formData.append('os', deviceInfo.os);
+
         // Debug: Log form data
         console.log('Submitting complete form with data:');
         for (let pair of formData.entries()) {
@@ -431,14 +440,18 @@ $(document).ready(function() {
         
         // Disable button
         $btn.prop('disabled', true);
-        
+
+        const deviceInfo = getDeviceInfo();
         $.ajax({
             url: '../api/cancel_repair.php',
             type: 'POST',
             data: JSON.stringify({ 
                 id: id,
                 cancelled_by: cancelledBy.trim(),
-                reason: reason.trim()
+                reason: reason.trim(),
+                device_type: deviceInfo.device_type,
+                browser: deviceInfo.browser,
+                os: deviceInfo.os
             }),
             contentType: 'application/json',
             dataType: 'json',

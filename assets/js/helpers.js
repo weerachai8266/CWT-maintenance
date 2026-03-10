@@ -24,6 +24,54 @@ function formatDateTimeTH(dateStr) {
     return formatDateDMY(dateStr);
 }
 
+/**
+ * ตรวจจับประเภทอุปกรณ์ / Browser / OS ของผู้ใช้
+ * ใช้ร่วมกันทุกหน้าที่ต้องการ device tracking
+ */
+function getDeviceInfo() {
+    const ua = navigator.userAgent;
+    let deviceType = 'desktop';
+    let browser = 'Unknown';
+    let os = 'Unknown';
+
+    // ตรวจจับประเภทอุปกรณ์
+    if (/tablet|ipad|playbook|silk/i.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform))) {
+        deviceType = 'tablet';
+    } else if (/Mobile|Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+        deviceType = 'mobile';
+    }
+
+    // ตรวจจับ Browser (ลำดับสำคัญ: Edge/Opera ก่อน Chrome)
+    if (ua.indexOf('Edg') > -1) {
+        browser = 'Edge';
+    } else if (ua.indexOf('OPR') > -1 || ua.indexOf('Opera') > -1) {
+        browser = 'Opera';
+    } else if (ua.indexOf('Chrome') > -1) {
+        browser = 'Chrome';
+    } else if (ua.indexOf('Safari') > -1) {
+        browser = 'Safari';
+    } else if (ua.indexOf('Firefox') > -1) {
+        browser = 'Firefox';
+    } else if (ua.indexOf('Trident') > -1 || ua.indexOf('MSIE') > -1) {
+        browser = 'Internet Explorer';
+    }
+
+    // ตรวจจับ OS (ลำดับสำคัญ: Android ก่อน Linux, iOS ก่อน macOS)
+    if (ua.indexOf('Android') > -1) {
+        os = 'Android';
+    } else if (/iPad|iPhone|iPod/.test(ua) || (ua.indexOf('Mac') > -1 && navigator.maxTouchPoints > 1)) {
+        os = 'iOS';
+    } else if (ua.indexOf('Win') > -1) {
+        os = 'Windows';
+    } else if (ua.indexOf('Mac') > -1) {
+        os = 'macOS';
+    } else if (ua.indexOf('Linux') > -1) {
+        os = 'Linux';
+    }
+
+    return { device_type: deviceType, browser: browser, os: os };
+}
+
 // อัปเดต placeholder เลขเอกสารตามประเภทงาน
 function updateDocumentNoPrefix() {
     var workType = $('#history_work_type').val();
