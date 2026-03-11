@@ -6,9 +6,19 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     $machine_number = trim($_GET['machine_number'] ?? '');
+    $date_from = trim($_GET['dateFrom'] ?? '');
     
     if (empty($machine_number)) {
         throw new Exception('Machine number parameter is required');
+    }
+
+    // Use dateFrom to determine month/year, fallback to current month
+    if (!empty($date_from) && strtotime($date_from)) {
+        $filter_year  = date('Y', strtotime($date_from));
+        $filter_month = date('m', strtotime($date_from));
+    } else {
+        $filter_year  = date('Y');
+        $filter_month = date('m');
     }
     
     // Get repair history
@@ -28,12 +38,13 @@ try {
         total_cost,
         TIMESTAMPDIFF(HOUR, start_job, COALESCE(end_job, NOW())) as calc_hours
         FROM mt_repair
-        WHERE machine_number = :machine_number
+        WHERE machine_number = :machine_number and action_type = 'repair' and start_job IS NOT NULL
+        AND YEAR(start_job) = :filter_year AND MONTH(start_job) = :filter_month
         ORDER BY start_job DESC
         LIMIT 50";
     
     $stmt = $conn->prepare($sql);
-    $stmt->execute([':machine_number' => $machine_number]);
+    $stmt->execute([':machine_number' => $machine_number, ':filter_year' => $filter_year, ':filter_month' => $filter_month]);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode([
