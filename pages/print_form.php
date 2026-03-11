@@ -20,7 +20,48 @@ try {
     if (!$data) {
         die('ไม่พบข้อมูลใบแจ้งซ่อม ID: ' . $id);
     }
-    
+
+    $repair_id = $data['id'];
+
+    // ดึง IP ของผู้แจ้งซ่อมจาก mt_device_log
+    $reporter_ip = '';
+    try {
+        $sqlIp = "SELECT ip_address FROM mt_device_log WHERE repair_id = :repair_id AND role = 'reporter' ORDER BY id DESC LIMIT 1";
+        $stmtIp = $conn->prepare($sqlIp);
+        $stmtIp->bindParam(':repair_id', $repair_id, PDO::PARAM_INT);
+        $stmtIp->execute();
+        $ipRow = $stmtIp->fetch(PDO::FETCH_ASSOC);
+        $reporter_ip = $ipRow ? $ipRow['ip_address'] : '';
+    } catch (PDOException $e) {
+        $reporter_ip = '';
+    }
+
+    // ดึง IP ของผู้อนุมัติจาก mt_approval_log
+    $approver_ip = '';
+    try {
+        $sqlIp2 = "SELECT ip_address FROM mt_approval_log WHERE repair_id = :repair_id ORDER BY id DESC LIMIT 1";
+        $stmtIp2 = $conn->prepare($sqlIp2);
+        $stmtIp2->bindParam(':repair_id', $repair_id, PDO::PARAM_INT);
+        $stmtIp2->execute();
+        $ipRow2 = $stmtIp2->fetch(PDO::FETCH_ASSOC);
+        $approver_ip = $ipRow2 ? $ipRow2['ip_address'] : '';
+    } catch (PDOException $e) {
+        $approver_ip = '';
+    }
+
+    // ดึง IP ของผู้รับงานจาก mt_device_log
+    $handler_ip = '';
+    try {
+        $sqlIp3 = "SELECT ip_address FROM mt_device_log WHERE repair_id = :repair_id AND role = 'handler' ORDER BY id DESC LIMIT 1";
+        $stmtIp3 = $conn->prepare($sqlIp3);
+        $stmtIp3->bindParam(':repair_id', $repair_id, PDO::PARAM_INT);
+        $stmtIp3->execute();
+        $ipRow3 = $stmtIp3->fetch(PDO::FETCH_ASSOC);
+        $handler_ip = $ipRow3 ? $ipRow3['ip_address'] : '';
+    } catch (PDOException $e) {
+        $handler_ip = '';
+    }
+
     // ดึงชื่อเครื่องจักรจาก mt_machines
     $machine_name = '';
     if (!empty($data['machine_number'])) {
@@ -285,14 +326,14 @@ try {
                         </div>
                         
                         <div class="form-field">
-                            <div>ลงชื่อ <span class="underline-field" style="min-width: 255px; cursor: default; "><?php echo htmlspecialchars($data['reported_by']); ?></span> ( ผู้แจ้งซ่อม )</div>
+                            <div>ลงชื่อ <span class="underline-field" style="min-width: 255px; cursor: default; "><?php echo htmlspecialchars($data['reported_by']); ?><?php if (!empty($reporter_ip)): ?><span class="no-print" style="margin-left: 6px; font-size: 9pt; color: #666;">IP: <?php echo htmlspecialchars($reporter_ip); ?></span><?php endif; ?></span> ( ผู้แจ้งซ่อม )</div>
                         </div>
                         <div class="form-field">
                             <div>วันที่ <span class="underline-field" style="min-width: 130px; cursor: default; "><?php echo htmlspecialchars($data['start_job'] ? date('d/m/Y', strtotime($data['start_job'])) : ''); ?></span> 
                             เวลา <span class="underline-field" style="min-width: 130px; cursor: default; "><?php echo htmlspecialchars($data['start_job'] ? date('H:i', strtotime($data['start_job'])) : ''); ?></span> น.</div>
                         </div>
                         <div class="form-field">
-                            <div>ลงชื่อ <span class="underline-field" style="min-width: 265px; cursor: default; "><?php echo htmlspecialchars($data['approver'] ?? ''); ?></span> ( ผู้อนุมัติ )</div>
+                            <div>ลงชื่อ <span class="underline-field" style="min-width: 265px; cursor: default; "><?php echo htmlspecialchars($data['approver'] ?? ''); ?><?php if (!empty($approver_ip)): ?><span class="no-print" style="margin-left: 6px; font-size: 9pt; color: #666;">IP: <?php echo htmlspecialchars($approver_ip); ?></span><?php endif; ?></span> ( ผู้อนุมัติ )</div>
                         </div>
                         <div class="form-field">
                             <div>วันที่ <span class="underline-field" style="min-width: 130px; cursor: default; "><?php echo htmlspecialchars($data['approved_at'] ? date('d/m/Y', strtotime($data['approved_at'])) : ''); ?></span> 
@@ -316,7 +357,7 @@ try {
                             <textarea class="text-area" rows="1" readonly><?php echo ($job_status === 'other') ? htmlspecialchars($job_other_text) : ''; ?></textarea>
                         </div>
                         <div class="form-field">
-                            <div>ลงชื่อ <span contenteditable="true" class="underline-field" style="min-width: 265px;"><?php echo htmlspecialchars($data['receiver_name']); ?></span> ( ผู้รับงาน )</div>
+                            <div>ลงชื่อ <span contenteditable="true" class="underline-field" style="min-width: 265px;"><?php echo htmlspecialchars($data['receiver_name']); ?><?php if (!empty($handler_ip)): ?><span class="no-print" style="margin-left: 6px; font-size: 9pt; color: #666;">IP: <?php echo htmlspecialchars($handler_ip); ?></span><?php endif; ?></span> ( ผู้รับงาน )</div>
                         </div>
                         <div style="margin-top: 8px; display: flex; justify-content: space-between;">
                             <div>วันที่ <span class="underline-field" style="min-width: 130px; cursor: default; "><?php echo htmlspecialchars($data['end_job'] ? date('d/m/Y', strtotime($data['end_job'])) : ''); ?></span> 
