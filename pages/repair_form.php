@@ -48,12 +48,24 @@
                 <li class="nav-item">
                         <a class="nav-link" href="kpi.php"><i class="fas fa-chart-line"></i> KPI</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="qr_machine.php"><i class="fas fa-qrcode"></i> QR Code</a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
 
 <div class="container-fluid mt-4">
+
+    <!-- QR Code Info Banner (shown when pre-filled from QR scan) -->
+    <div id="qr-banner" class="alert alert-info alert-dismissible fade show d-none" role="alert">
+        <i class="fas fa-qrcode"></i>
+        <strong>สแกน QR Code สำเร็จ!</strong>
+        ข้อมูลเครื่องจักรถูกเลือกอัตโนมัติแล้ว กรุณากรอกข้อมูลอื่น ๆ ให้ครบถ้วน
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+
     <div class="row mb-3">
         <div class="col-md-12">
             <h2><i class="fas fa-clipboard-list"></i> ระบบแจ้งซ่อมเครื่องจักร</h2>
@@ -314,11 +326,33 @@
 <script src="../assets/js/master_data.js"></script>
 
 <script>
-    // Load master data dropdowns
+    // Load master data dropdowns, then auto-fill from URL params if present
     $(document).ready(function() {
-        loadDivisions('#division', '-- เลือกฝ่าย --');
-        loadDepartments('#department', '-- เลือกหน่วยงาน --');
-        loadBranches('#branch', '-- เลือกสาขา --');
+        var urlParams = new URLSearchParams(window.location.search);
+        var qrDivision   = urlParams.get('division')   || '';
+        var qrDepartment = urlParams.get('department') || '';
+        var qrBranch     = urlParams.get('branch')     || '';
+        var fromQR = urlParams.get('machine') || qrDivision || qrDepartment || qrBranch;
+
+        if (fromQR) {
+            $('#qr-banner').removeClass('d-none');
+        }
+
+        loadDivisions('#division', '-- เลือกฝ่าย --', function() {
+            if (qrDivision) {
+                $('#division').val(qrDivision).prop('disabled', true).css('background-color', '#e9ecef');
+            }
+        });
+        loadDepartments('#department', '-- เลือกหน่วยงาน --', function() {
+            if (qrDepartment) {
+                $('#department').val(qrDepartment).prop('disabled', true).css('background-color', '#e9ecef');
+            }
+        });
+        loadBranches('#branch', '-- เลือกสาขา --', function() {
+            if (qrBranch) {
+                $('#branch').val(qrBranch).prop('disabled', true).css('background-color', '#e9ecef');
+            }
+        });
         loadIssues();
     });
 

@@ -696,7 +696,7 @@ require_once '../config/config.php';
             <div class="col-md-2">
                 <div class="kpi-card primary">
                     <i class="fas fa-clipboard-list kpi-icon"></i>
-                    <div class="kpi-label">ใบแจ้งซ่อมทั้งหมด</div>
+                    <div class="kpi-label">ใบแจ้งทั้งหมด</div>
                     <div class="kpi-value" id="totalRepairs">0</div>
                     <div class="kpi-detail">รายการทั้งหมด</div>
                 </div>
@@ -714,7 +714,7 @@ require_once '../config/config.php';
             <div class="col-md-2">
                 <div class="kpi-card info">
                     <i class="fas fa-tools kpi-icon"></i>
-                    <div class="kpi-label">กำลังซ่อม</div>
+                    <div class="kpi-label">กำลังดำเนินการ</div>
                     <div class="kpi-value" id="inProgressRepairs">0</div>
                     <div class="kpi-detail">รายการ</div>
                 </div>
@@ -760,7 +760,7 @@ require_once '../config/config.php';
                 </div>
             </div>            -->
 
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div class="kpi-card purple">
                     <i class="fas fa-clock kpi-icon"></i>
                     <div class="kpi-label">เวลาทำงานรวม</div>
@@ -769,7 +769,7 @@ require_once '../config/config.php';
                 </div>
             </div>
             
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div class="kpi-card orange">
                     <i class="fas fa-exclamation-circle kpi-icon"></i>
                     <div class="kpi-label">เวลาหยุดเครื่องรวม</div>
@@ -778,7 +778,7 @@ require_once '../config/config.php';
                 </div>
             </div>
             
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div class="kpi-card info">
                     <i class="fas fa-percentage kpi-icon"></i>
                     <div class="kpi-label">อัตราความสำเร็จ</div>
@@ -787,7 +787,7 @@ require_once '../config/config.php';
                 </div>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div class="kpi-card primary">
                     <i class="fas fa-stopwatch kpi-icon"></i>
                     <div class="kpi-label">MTTR</div>

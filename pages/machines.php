@@ -69,6 +69,9 @@ require_once '../config/config.php';
                         <a class="nav-link" href="kpi.php"><i class="fas fa-chart-line"></i> KPI</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="qr_machine.php"><i class="fas fa-qrcode"></i> QR Code</a>
+                    </li>
+                    <li class="nav-item">
                         <span class="nav-link text-light">
                             <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['technician_username']); ?>
                         </span>

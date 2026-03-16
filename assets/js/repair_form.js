@@ -56,12 +56,35 @@ $(document).ready(function() {
                     });
                     
                     $('#machine_list').html(options);
+
+                    // Auto-fill machine from URL param after list is ready
+                    prefillMachineFromURL();
                 }
             },
             error: function() {
                 console.error('ไม่สามารถโหลดรายการเครื่องจักรได้');
             }
         });
+    }
+
+    /**
+     * Pre-fill machine_number and machine_name from URL ?machine= parameter
+     */
+    function prefillMachineFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const machineParam = urlParams.get('machine');
+        if (!machineParam) return;
+
+        const code = machineParam.trim().toUpperCase();
+        $('#machine_number').val(code);
+
+        const machine = machinesData.find(m => m.machine_code === code);
+        if (machine) {
+            $('#machine_name').val(machine.machine_name);
+        }
+
+        // Lock fields that came from QR
+        $('#machine_number').prop('readonly', true).css('background-color', '#e9ecef');
     }
     
     /**
@@ -188,6 +211,14 @@ $(document).ready(function() {
         
         // Create FormData for file upload
         const formData = new FormData(this);
+
+        // If fields were locked from QR scan (disabled), re-inject their values
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('division'))   formData.set('division',   urlParams.get('division'));
+        if (urlParams.get('department')) formData.set('department', urlParams.get('department'));
+        if (urlParams.get('branch'))     formData.set('branch',     urlParams.get('branch').toUpperCase());
+        if (urlParams.get('machine'))    formData.set('machine_number', urlParams.get('machine').toUpperCase());
+
         const deviceInfo = getDeviceInfo();
         formData.append('device_type', deviceInfo.device_type);
         formData.append('browser', deviceInfo.browser);

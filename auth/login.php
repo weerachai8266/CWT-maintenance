@@ -8,6 +8,82 @@ if (isset($_SESSION['technician_logged_in']) && $_SESSION['technician_logged_in'
     exit;
 }
 
+/* ========== Helper: รับ IP จริงของผู้ใช้ ========== */
+function get_client_ip(): string {
+    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_REAL_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $key) {
+        if (!empty($_SERVER[$key])) {
+            $ip = trim(explode(',', $_SERVER[$key])[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
+        }
+    }
+    return '0.0.0.0';
+}
+
+/* ========== Helper: วิเคราะห์ User-Agent ========== */
+function parse_user_agent(string $ua): array {
+    $browser     = 'Unknown';
+    $os          = 'Unknown';
+    $device_type = 'Desktop';
+
+    // --- OS ---
+    if      (preg_match('/Windows NT 10/i', $ua))   $os = 'Windows 10/11';
+    elseif  (preg_match('/Windows NT 6\.3/i', $ua)) $os = 'Windows 8.1';
+    elseif  (preg_match('/Windows NT 6\.1/i', $ua)) $os = 'Windows 7';
+    elseif  (preg_match('/Windows/i', $ua))          $os = 'Windows';
+    elseif  (preg_match('/Android (\d+[\.\d]*)/i', $ua, $m)) $os = 'Android ' . $m[1];
+    elseif  (preg_match('/iPhone OS ([\d_]+)/i', $ua, $m))   $os = 'iOS ' . str_replace('_', '.', $m[1]);
+    elseif  (preg_match('/iPad.*OS ([\d_]+)/i', $ua, $m))    $os = 'iPadOS ' . str_replace('_', '.', $m[1]);
+    elseif  (preg_match('/Mac OS X ([\d_]+)/i', $ua, $m))    $os = 'macOS ' . str_replace('_', '.', $m[1]);
+    elseif  (preg_match('/Linux/i', $ua))            $os = 'Linux';
+
+    // --- Device type ---
+    if      (preg_match('/bot|crawl|spider|slurp|mediapartners/i', $ua)) $device_type = 'Bot';
+    elseif  (preg_match('/iPad/i', $ua))             $device_type = 'Tablet';
+    elseif  (preg_match('/Mobile|Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua)) $device_type = 'Mobile';
+
+    // --- Browser (ต้อง check Edge/OPR ก่อน Chrome) ---
+    if      (preg_match('/Edg\/(\d+)/i', $ua, $m))     $browser = 'Edge ' . $m[1];
+    elseif  (preg_match('/OPR\/(\d+)/i', $ua, $m))     $browser = 'Opera ' . $m[1];
+    elseif  (preg_match('/SamsungBrowser\/(\d+)/i', $ua, $m)) $browser = 'Samsung ' . $m[1];
+    elseif  (preg_match('/Chrome\/(\d+)/i', $ua, $m))  $browser = 'Chrome ' . $m[1];
+    elseif  (preg_match('/Firefox\/(\d+)/i', $ua, $m)) $browser = 'Firefox ' . $m[1];
+    elseif  (preg_match('/Safari\/(\d+)/i', $ua, $m) && !preg_match('/Chrome/i', $ua)) {
+        if (preg_match('/Version\/(\d+)/i', $ua, $mv)) $browser = 'Safari ' . $mv[1];
+        else $browser = 'Safari';
+    }
+    elseif  (preg_match('/MSIE (\d+)|Trident.*rv:(\d+)/i', $ua, $m)) $browser = 'IE ' . ($m[1] ?: $m[2]);
+
+    return compact('browser', 'os', 'device_type');
+}
+
+/* ========== Helper: บันทึก login log ========== */
+function write_login_log(PDO $conn, ?int $user_id, string $username, string $status, string $note = ''): void {
+    $ip  = get_client_ip();
+    $ua  = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+    $parsed = parse_user_agent($ua);
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO mt_login_log
+                (user_id, username, ip_address, device_type, browser, os, user_agent, status, note)
+            VALUES
+                (:user_id, :username, :ip, :device_type, :browser, :os, :ua, :status, :note)
+        ");
+        $stmt->execute([
+            ':user_id'     => $user_id,
+            ':username'    => $username,
+            ':ip'          => $ip,
+            ':device_type' => $parsed['device_type'],
+            ':browser'     => $parsed['browser'],
+            ':os'          => $parsed['os'],
+            ':ua'          => $ua,
+            ':status'      => $status,
+            ':note'        => $note,
+        ]);
+    } catch (PDOException $e) {
+        error_log('write_login_log error: ' . $e->getMessage());
+    }
+}
+
 // ตรวจสอบการ login
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,10 +109,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // ตรวจสอบว่า account ถูกล็อคหรือไม่
                 if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
                     $error = 'บัญชีของคุณถูกล็อค กรุณารอ ' . date('H:i:s', strtotime($user['locked_until']) - time()) . ' นาที';
+                    write_login_log($conn, (int)$user['id'], $username, 'locked', 'Account locked until ' . $user['locked_until']);
                 } 
                 // ตรวจสอบสถานะ active
                 elseif ($user['is_active'] != 1) {
                     $error = 'บัญชีของคุณถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ';
+                    write_login_log($conn, (int)$user['id'], $username, 'disabled', 'Account is inactive');
                 }
                 // ตรวจสอบรหัสผ่าน
                 elseif (password_verify($password, $user['password'])) {
@@ -51,16 +129,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_branch'] = $user['branch'];
                     $_SESSION['login_time'] = time();
                     
-                    // รีเซ็ต login attempts และอัปเดต last_login
+                    // รีเซ็ต login attempts, อัปเดต last_login และ last_login_ip
+                    $ip = get_client_ip();
                     $updateStmt = $conn->prepare("
                         UPDATE mt_users 
                         SET login_attempts = 0, 
                             locked_until = NULL,
-                            last_login = NOW()
+                            last_login = NOW(),
+                            last_login_ip = :ip
                         WHERE id = :id
                     ");
-                    $updateStmt->execute([':id' => $user['id']]);
-                    
+                    $updateStmt->execute([':ip' => $ip, ':id' => $user['id']]);
+
+                    write_login_log($conn, (int)$user['id'], $username, 'success');
+
                     header('Location: ../pages/machines.php');
                     exit;
                 } else {
@@ -72,8 +154,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($attempts >= 5) {
                         $locked_until = date('Y-m-d H:i:s', strtotime('+15 minutes'));
                         $error = 'คุณพยายาม login ผิดเกินกำหนด บัญชีถูกล็อคเป็นเวลา 15 นาที';
+                        write_login_log($conn, (int)$user['id'], $username, 'locked', 'Too many attempts - account locked 15 min');
                     } else {
                         $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (พยายาม ' . $attempts . '/5 ครั้ง)';
+                        write_login_log($conn, (int)$user['id'], $username, 'failed', 'Wrong password attempt ' . $attempts . '/5');
                     }
                     
                     $updateStmt = $conn->prepare("
@@ -90,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+                write_login_log($conn, null, $username, 'failed', 'Username not found');
             }
         } catch (PDOException $e) {
             error_log('Login error: ' . $e->getMessage());

@@ -41,7 +41,7 @@ function loadBranches(selectId, firstOptionText = "ทั้งหมด", callb
     });
 }
 
-function loadDivisions(selectId, firstOptionText = "ทั้งหมด") {
+function loadDivisions(selectId, firstOptionText = "ทั้งหมด", callback) {
     $.ajax({
         url: '../api/master_data.php',
         method: 'GET',
@@ -57,11 +57,15 @@ function loadDivisions(selectId, firstOptionText = "ทั้งหมด") {
                     }
                 });
             }
+            if (typeof callback === 'function') callback(response);
+        },
+        error: function() {
+            if (typeof callback === 'function') callback({ success: false, data: [] });
         }
     });
 }
 
-function loadDepartments(selectId, firstOptionText = "ทั้งหมด") {
+function loadDepartments(selectId, firstOptionText = "ทั้งหมด", callback) {
     $.ajax({
         url: '../api/master_data.php',
         method: 'GET',
@@ -77,6 +81,10 @@ function loadDepartments(selectId, firstOptionText = "ทั้งหมด") {
                     }
                 });
             }
+            if (typeof callback === 'function') callback(response);
+        },
+        error: function() {
+            if (typeof callback === 'function') callback({ success: false, data: [] });
         }
     });
 }
