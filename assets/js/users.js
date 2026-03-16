@@ -108,8 +108,8 @@ function editUser(id) {
                 $('#phone').val(user.phone);
                 $('#role').val(user.role);
                 $('#employee_id').val(user.employee_id);
-                $('#department').val(user.department);
-                $('#branch').val(user.branch);
+                $('#user_department').val(user.department);
+                $('#user_branch').val(user.branch);
                 $('#position').val(user.position);
                 
                 $('#password').prop('required', false);

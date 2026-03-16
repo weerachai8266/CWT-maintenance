@@ -1173,13 +1173,13 @@ require_once '../config/config.php';
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>แผนก</label>
-                                    <input type="text" class="form-control" id="department" name="department">
+                                    <input type="text" class="form-control" id="user_department" name="department">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>สาขา</label>
-                                    <input type="text" class="form-control" id="branch" name="branch">
+                                    <input type="text" class="form-control" id="user_branch" name="branch">
                                 </div>
                             </div>
                             <div class="col-md-4">
