@@ -383,7 +383,7 @@ try {
                             <strong>บันทึกความคิดเห็น MTC / MTM</strong>
                         </div>
                         <div>
-                            <textarea class="text-area" id="mtc_comment" rows="3" ><?php echo htmlspecialchars($data['mtc_comment'] ?? ''); ?></textarea>
+                            <textarea class="text-area" id="mtc_comment" rows="1" ><?php echo htmlspecialchars($data['mtc_comment'] ?? ''); ?></textarea>
                         </div>
                         <div class="form-field" style="margin-top: 15px; padding: 0px;">
                             <div>ลงชื่อ <span contenteditable="true" class="underline-field" id="mtc_signer" style="min-width: 125px;"><?php echo htmlspecialchars($data['mtc_signer'] ?? ''); ?></span> 
@@ -397,7 +397,7 @@ try {
                             สาเหตุ/การแก้ไข
                         </div>
                         <div>
-                            <textarea class="text-area" id="mt_report" rows="3"><?php echo htmlspecialchars($data['mt_report'] ?? ''); ?></textarea>
+                            <textarea class="text-area" id="mt_report" rows="4"><?php echo htmlspecialchars($data['mt_report'] ?? ''); ?></textarea>
                         </div>
                         <div class="form-field" style="margin-top: 10px;">
                         <strong>การดำเนินการ</strong>
@@ -422,7 +422,7 @@ try {
                             </div>
                         </div>                
                         <div>
-                            <textarea class="text-area" id="operation_detail" rows="3"><?php echo htmlspecialchars($data['operation_detail'] ?? ''); ?></textarea>
+                            <textarea class="text-area" id="operation_detail" rows="4"><?php echo htmlspecialchars($data['operation_detail'] ?? ''); ?></textarea>
                         </div>
                         <div class="form-field">
                             จำนวนผู้ปฏิบัติงาน <span contenteditable="true" class="underline-field" id="worker_count" style="min-width: 225px;"><?php echo htmlspecialchars($data['worker_count'] ?? ''); ?></span> คน

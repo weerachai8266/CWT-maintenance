@@ -526,8 +526,8 @@
                     let count = 0;
                     _soundPlaying = true;
                     const playBeep = () => {
-                        if (count < 3) {
-                            const audio = new Audio('../assets/sounds/tiengdong_com.mp3');
+                        if (count < 2) {    // เล่นเสียง 2 ครั้งต่อรายการใหม่
+                            const audio = new Audio('../assets/sounds/msn.mp3');
                             audio.volume = 1.0;
                             audio.onended = () => {
                                 count++;
