@@ -90,7 +90,9 @@ body {
 /* Table Styles */
 .table-responsive {
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -185,16 +187,20 @@ body {
         font-size: 11px;
     }
     
-    /* Mobile: ซ่อนคอลัมน์ไม่สำคัญ */
-    .table thead th:nth-child(5),  /* รูปภาพ */
-    .table thead th:nth-child(9),  /* เวลาเริ่ม */
-    .table thead th:nth-child(10), /* เวลาสิ้นสุด */
-    .table tbody td:nth-child(5),
-    .table tbody td:nth-child(9),
-    .table tbody td:nth-child(10) {
+    /* ซ่อนคอลัมน์: รูปภาพ, ผู้ดำเนินการ, เวลาเริ่ม, เวลาสิ้นสุด, พิมพ์ (เฉพาะตารางแจ้งซ่อม) */
+    .table-repair-display thead th:nth-child(5),
+    .table-repair-display thead th:nth-child(7),
+    .table-repair-display thead th:nth-child(9),
+    .table-repair-display thead th:nth-child(10),
+    .table-repair-display thead th:nth-child(12),
+    .table-repair-display tbody td:nth-child(5),
+    .table-repair-display tbody td:nth-child(7),
+    .table-repair-display tbody td:nth-child(9),
+    .table-repair-display tbody td:nth-child(10),
+    .table-repair-display tbody td:nth-child(12) {
         display: none;
     }
-    
+
     /* ปรับขนาดปุ่ม */
     .btn-sm {
         padding: 2px 6px;
@@ -219,14 +225,8 @@ body {
         font-size: 10px;
     }
     
-    /* Mobile portrait: ซ่อนคอลัมน์เพิ่มเติม */
-    .table thead th:nth-child(2),  /* แผนก */
-    .table thead th:nth-child(6),  /* ผู้แจ้ง */
-    .table tbody td:nth-child(2),
-    .table tbody td:nth-child(6) {
-        display: none;
-    }
-    
+    /* Mobile portrait: ซ่อนเพิ่มเติมเหมือน ≤768px (ใช้ rules เดิมจาก inherit) */
+
     .btn-group .btn {
         padding: 2px 4px;
     }
@@ -276,7 +276,6 @@ select.form-control option {
 /* Sticky columns for horizontal scroll */
 .table-responsive {
     position: relative;
-    overflow-x: auto;
     max-width: 100%;
 }
 

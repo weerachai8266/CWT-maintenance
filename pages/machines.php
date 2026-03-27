@@ -190,8 +190,8 @@ require_once '../config/config.php';
                 </div>
 
                 <!-- Repairs Table -->
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered">
+                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table class="table table-striped table-bordered" style="min-width: 900px;">
                         <thead class="thead-dark">
                             <tr>
                                 <th>เลขที่</th>                                

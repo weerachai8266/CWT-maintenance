@@ -48,7 +48,7 @@ try {
     
     if (count($results) > 0) {
         echo "<div class='table-responsive' style='overflow-x: auto;'>";
-        echo "<table class='table table-bordered table-striped table-hover' style='min-width: 1200px;'>";
+        echo "<table class='table table-bordered table-striped table-hover table-repair-display' style='min-width: 1200px;'>";
         echo "<thead class='thead-dark'>";
         echo "<tr>";
         echo "<th style='width: 130px;'>เลขที่เอกสาร</th>";
