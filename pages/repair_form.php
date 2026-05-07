@@ -9,16 +9,16 @@
     <title>ระบบแจ้งซ่อมเครื่องจักร | Maintenance Request System</title>
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('../assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
     
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css">
+    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css?v=<?= filemtime('../assets/vendor/fonts/sarabun.css') ?>">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css?v=<?= filemtime('../assets/css/style.css') ?>">
 </head>
 <body>
 
@@ -315,15 +315,15 @@
 </div>
 
 <!-- jQuery -->
-<script src="../assets/vendor/jquery/jquery-3.5.1.min.js"></script>
+<script src="../assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('../assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
 
 <!-- Bootstrap JS Bundle (includes Popper.js) -->
-<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js?v=<?= filemtime('../assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
 
 <!-- Custom JS -->
-<script src="../assets/js/helpers.js"></script>
-<script src="../assets/js/repair_form.js"></script>
-<script src="../assets/js/master_data.js"></script>
+<script src="../assets/js/helpers.js?v=<?= filemtime('../assets/js/helpers.js') ?>"></script>
+<script src="../assets/js/repair_form.js?v=<?= filemtime('../assets/js/repair_form.js') ?>"></script>
+<script src="../assets/js/master_data.js?v=<?= filemtime('../assets/js/master_data.js') ?>"></script>
 
 <script>
     // Load master data dropdowns, then auto-fill from URL params if present

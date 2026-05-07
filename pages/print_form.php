@@ -127,9 +127,9 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ใบแจ้งซ่อม - <?php echo $form_number; ?></title>
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/print.css">
-    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="../assets/css/print.css?v=<?= filemtime('../assets/css/print.css') ?>">
+    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css?v=<?= filemtime('../assets/vendor/fonts/sarabun.css') ?>">
     <style>
         .watermark {
             position: fixed;

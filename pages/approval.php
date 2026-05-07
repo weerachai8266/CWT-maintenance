@@ -49,9 +49,9 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>อนุมัติใบแจ้งซ่อม - ระบบ MT</title>
-    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('../assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css?v=<?= filemtime('../assets/vendor/fonts/sarabun.css') ?>">
     <style>
         * {
             font-family: 'Sarabun', sans-serif;
@@ -473,10 +473,10 @@ try {
         </div>
     </div>
 
-    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js"></script>
-    <script src="../assets/vendor/popper/popper.min.js"></script>
-    <script src="../assets/vendor/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/js/helpers.js"></script>
+    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('../assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
+    <script src="../assets/vendor/popper/popper.min.js?v=<?= filemtime('../assets/vendor/popper/popper.min.js') ?>"></script>
+    <script src="../assets/vendor/bootstrap/js/bootstrap.min.js?v=<?= filemtime('../assets/vendor/bootstrap/js/bootstrap.min.js') ?>"></script>
+    <script src="../assets/js/helpers.js?v=<?= filemtime('../assets/js/helpers.js') ?>"></script>
     <script>
         function approveRepair(id, docNo) {
             $('#approve_repair_id').val(id);

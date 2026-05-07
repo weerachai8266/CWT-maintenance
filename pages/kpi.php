@@ -9,23 +9,23 @@ require_once '../config/config.php';
     <title>KPI Dashboard - Maintenance System</title>
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('../assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
     
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css">
+    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css?v=<?= filemtime('../assets/vendor/fonts/sarabun.css') ?>">
     
     <!-- Chart.js -->
-    <script src="../assets/vendor/chartjs/chart.min.js"></script>
+    <script src="../assets/vendor/chartjs/chart.min.js?v=<?= filemtime('../assets/vendor/chartjs/chart.min.js') ?>"></script>
     
     <!-- jsPDF for PDF export -->
-    <script src="../assets/vendor/jspdf/jspdf.umd.min.js"></script>
-    <script src="../assets/vendor/html2canvas/html2canvas.min.js"></script>
+    <script src="../assets/vendor/jspdf/jspdf.umd.min.js?v=<?= filemtime('../assets/vendor/jspdf/jspdf.umd.min.js') ?>"></script>
+    <script src="../assets/vendor/html2canvas/html2canvas.min.js?v=<?= filemtime('../assets/vendor/html2canvas/html2canvas.min.js') ?>"></script>
     
     <!-- SheetJS for Excel export -->
-    <script src="../assets/vendor/xlsx/xlsx.full.min.js"></script>
+    <script src="../assets/vendor/xlsx/xlsx.full.min.js?v=<?= filemtime('../assets/vendor/xlsx/xlsx.full.min.js') ?>"></script>
     
     <style>
         * {
@@ -1060,9 +1060,9 @@ require_once '../config/config.php';
     </div>
 
     <!-- Scripts -->
-    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js"></script>
-    <script src="../assets/vendor/popper/popper.min.js"></script>
-    <script src="../assets/vendor/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/js/kpi.js"></script>
+    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('../assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
+    <script src="../assets/vendor/popper/popper.min.js?v=<?= filemtime('../assets/vendor/popper/popper.min.js') ?>"></script>
+    <script src="../assets/vendor/bootstrap/js/bootstrap.min.js?v=<?= filemtime('../assets/vendor/bootstrap/js/bootstrap.min.js') ?>"></script>
+    <script src="../assets/js/kpi.js?v=<?= filemtime('../assets/js/kpi.js') ?>"></script>
 </body>
 </html>

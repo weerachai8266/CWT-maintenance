@@ -16,10 +16,10 @@ require_once '../config/db.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สร้าง QR Code เครื่องจักร | <?= SYSTEM_NAME ?></title>
-    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css">
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('../assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css?v=<?= filemtime('../assets/vendor/fonts/sarabun.css') ?>">
+    <link rel="stylesheet" href="../assets/css/style.css?v=<?= filemtime('../assets/css/style.css') ?>">
     <style>
         .machine-card {
             border: 1px solid #dee2e6;
@@ -174,10 +174,10 @@ require_once '../config/db.php';
     </div>
 </div>
 
-<script src="../assets/vendor/jquery/jquery-3.5.1.min.js"></script>
-<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/vendor/qrcodejs/qrcode.min.js"></script>
-<script src="../assets/js/master_data.js"></script>
+<script src="../assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('../assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js?v=<?= filemtime('../assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+<script src="../assets/vendor/qrcodejs/qrcode.min.js?v=<?= filemtime('../assets/vendor/qrcodejs/qrcode.min.js') ?>"></script>
+<script src="../assets/js/master_data.js?v=<?= filemtime('../assets/js/master_data.js') ?>"></script>
 
 <script>
 'use strict';

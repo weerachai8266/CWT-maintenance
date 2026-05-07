@@ -7,13 +7,22 @@
     <title>ระบบแจ้งซ่อม - Maintenance Request System</title>
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('assets/vendor/fontawesome/css/all.min.css') ?>">
     
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="assets/vendor/fonts/sarabun.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/sarabun.css?v=<?= filemtime('assets/vendor/fonts/sarabun.css') ?>">
+
+    <!-- Web Visitor Tracker -->
+    <script>
+        window.TRACKER_SITE='mt'; // เปลี่ยนชื่อเว็บตามจริง
+        window.TRACKER_URL = location.hostname === '192.168.100.10'
+        ? 'http://192.168.100.10/dashboard/tracker.php'
+        : 'http://192.168.0.44/dashboard/tracker.php';
+    </script>
+    <script src="http://192.168.0.44/dashboard/track.js" async></script>
     
     <style>
         * {
@@ -420,9 +429,9 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/vendor/jquery/jquery-3.5.1.min.js"></script>
-    <script src="assets/vendor/popper/popper.min.js"></script>
-    <script src="assets/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
+    <script src="assets/vendor/popper/popper.min.js?v=<?= filemtime('assets/vendor/popper/popper.min.js') ?>"></script>
+    <script src="assets/vendor/bootstrap/js/bootstrap.min.js?v=<?= filemtime('assets/vendor/bootstrap/js/bootstrap.min.js') ?>"></script>
     
     <script>
         // Add smooth scroll behavior

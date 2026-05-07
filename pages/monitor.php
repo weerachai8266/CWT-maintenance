@@ -8,13 +8,13 @@
     <title>Monitor - ระบบแจ้งซ่อมเครื่องจักร</title>
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('../assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css">
+    <link rel="stylesheet" href="../assets/vendor/fonts/sarabun.css?v=<?= filemtime('../assets/vendor/fonts/sarabun.css') ?>">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
     
     <style>
         html {
@@ -487,10 +487,10 @@
     </div>
 
     <!-- jQuery -->
-    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js"></script>
+    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('../assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
     
     <!-- Bootstrap JS -->
-    <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js?v=<?= filemtime('../assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     
     <script>
         $(document).ready(function() {

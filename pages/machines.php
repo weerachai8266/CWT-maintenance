@@ -18,9 +18,9 @@ require_once '../config/config.php';
 
     <!-- Import JS dependencies -->
     <title>จัดการระบบ MT - ระบบแจ้งซ่อม</title>
-    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css?v=<?= filemtime('../assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
+    <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=<?= filemtime('../assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="../assets/css/style.css?v=<?= filemtime('../assets/css/style.css') ?>">
     <style>
         .tab-content {
             padding: 20px 0;
@@ -1236,18 +1236,18 @@ require_once '../config/config.php';
         </div>
     </div>
 
-    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js"></script>
-    <script src="../assets/vendor/popper/popper.min.js"></script>
-    <script src="../assets/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/vendor/jquery/jquery-3.5.1.min.js?v=<?= filemtime('../assets/vendor/jquery/jquery-3.5.1.min.js') ?>"></script>
+    <script src="../assets/vendor/popper/popper.min.js?v=<?= filemtime('../assets/vendor/popper/popper.min.js') ?>"></script>
+    <script src="../assets/vendor/bootstrap/js/bootstrap.min.js?v=<?= filemtime('../assets/vendor/bootstrap/js/bootstrap.min.js') ?>"></script>
     <script>
         // ส่ง role ของ user ปัจจุบันให้ JavaScript
         var currentUserRole = '<?php echo $_SESSION['user_role'] ?? 'viewer'; ?>';
     </script>
-    <script src="../assets/js/master_data.js"></script>
-    <script src="../assets/js/machines.js"></script>
-    <script src="../assets/js/machine_history.js"></script>
-    <script src="../assets/js/users.js"></script>
-    <script src="../assets/js/helpers.js"></script>
-    <script src="../assets/js/repairs.js"></script>
+    <script src="../assets/js/master_data.js?v=<?= filemtime('../assets/js/master_data.js') ?>"></script>
+    <script src="../assets/js/machines.js?v=<?= filemtime('../assets/js/machines.js') ?>"></script>
+    <script src="../assets/js/machine_history.js?v=<?= filemtime('../assets/js/machine_history.js') ?>"></script>
+    <script src="../assets/js/users.js?v=<?= filemtime('../assets/js/users.js') ?>"></script>
+    <script src="../assets/js/helpers.js?v=<?= filemtime('../assets/js/helpers.js') ?>"></script>
+    <script src="../assets/js/repairs.js?v=<?= filemtime('../assets/js/repairs.js') ?>"></script>
 </body>
 </html>
